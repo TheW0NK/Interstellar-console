@@ -1485,5 +1485,80 @@ document.querySelectorAll('.copy-btn').forEach(btn=>{
   });
 });
 </script>
+
+<script>
+/* ---------- VEXIUM BACKEND BRIDGE ---------- */
+(function(){
+  async function api(path, options){
+    const res = await fetch(path, Object.assign({credentials:'include'}, options||{}));
+    if(!res.ok) throw new Error(await res.text() || res.statusText);
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+  function show(msg){ if(typeof toast === 'function') toast(msg); else console.log(msg); }
+
+  const loginBtn = document.getElementById('loginSubmit');
+  if(loginBtn){
+    loginBtn.addEventListener('click', async function(e){
+      e.preventDefault(); e.stopImmediatePropagation();
+      try{
+        const data = await api('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:loginUserInput.value.trim(), password:loginPassInput.value})});
+        loginError.classList.remove('show');
+        loginScreen.style.display = 'none'; appShell.style.display = 'flex';
+        document.getElementById('sessionUser').textContent = data.user;
+        document.getElementById('sessionAvatar').textContent = data.user.slice(0,2).toUpperCase();
+        const dashName = document.getElementById('dashUserName'); if(dashName) dashName.textContent = data.user;
+        connectLogs(); show('Welcome back, '+data.user);
+      }catch(err){
+        loginError.textContent = 'Backend login failed: '+err.message;
+        loginError.classList.add('show'); loginPassInput.value=''; loginPassInput.focus();
+      }
+    }, true);
+  }
+  [loginUserInput, loginPassInput].forEach(inp=>inp && inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); loginBtn.click(); } }, true));
+
+  async function postAction(path, label){
+    try{ await api(path, {method:'POST'}); show(label); }
+    catch(err){ show(label+' failed: '+err.message); }
+  }
+  const actions = [
+    ['btnStart','/api/server/start','Server start requested'],
+    ['btnStop','/api/server/stop','Server stop requested'],
+    ['btnRestart','/api/server/restart','Server restart requested']
+  ];
+  actions.forEach(([id,path,label])=>{ const el=document.getElementById(id); if(el) el.addEventListener('click', e=>{ e.preventDefault(); e.stopImmediatePropagation(); postAction(path,label); }, true); });
+
+  const sendBtn = document.getElementById('cmdSend');
+  async function backendCommand(e){
+    if(e){ e.preventDefault(); e.stopImmediatePropagation(); }
+    const inp = document.getElementById('cmdInput'); const val = inp.value.trim(); if(!val) return;
+    pushLog('CMD','> '+val); inp.value='';
+    try{ await api('/api/console/command', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({command:val})}); }
+    catch(err){ pushLog('ERROR','Backend command failed: '+err.message); }
+  }
+  if(sendBtn) sendBtn.addEventListener('click', backendCommand, true);
+  const cmdInput = document.getElementById('cmdInput');
+  if(cmdInput) cmdInput.addEventListener('keydown', e=>{ if(e.key==='Enter') backendCommand(e); }, true);
+
+  let logStream;
+  function connectLogs(){
+    if(logStream) return;
+    logStream = new EventSource('/ws/logs', {withCredentials:true});
+    logStream.onmessage = ev => { try{ const msg=JSON.parse(ev.data); pushLog('INFO', msg.line); }catch(_){ pushLog('INFO', ev.data); } };
+    logStream.onerror = () => { logStream.close(); logStream = null; setTimeout(()=>{ if(appShell.style.display !== 'none') connectLogs(); }, 2000); };
+  }
+
+  const uploadBtn = document.getElementById('uploadBtn');
+  if(uploadBtn){
+    uploadBtn.addEventListener('click', e=>{
+      e.preventDefault(); e.stopImmediatePropagation();
+      const input = document.createElement('input'); input.type='file'; input.multiple=true;
+      input.onchange = async () => { const fd = new FormData(); [...input.files].forEach(f=>fd.append('files',f)); fd.append('path', curPath || '/'); try{ await api('/api/files/upload',{method:'POST',body:fd}); show('Upload complete'); }catch(err){ show('Upload failed: '+err.message); } };
+      input.click();
+    }, true);
+  }
+})();
+</script>
+
 </body>
 </html>
