@@ -1485,5 +1485,156 @@ document.querySelectorAll('.copy-btn').forEach(btn=>{
   });
 });
 </script>
+
+<script>
+/* ---------- VEXIUM BACKEND BRIDGE ---------- */
+(function(){
+  let backendStatus = {state:'offline', running:false};
+  let statusTimer = null;
+  let logStream = null;
+  let pluginSearchTimer = null;
+
+  async function api(path, options){
+    const res = await fetch(path, Object.assign({credentials:'include'}, options||{}));
+    if(!res.ok) throw new Error((await res.text()).trim() || res.statusText);
+    const ct = res.headers.get('content-type') || '';
+    return ct.includes('application/json') ? res.json() : res.text();
+  }
+  function show(msg){ if(typeof toast === 'function') toast(msg); else console.log(msg); }
+  function fmtBytes(bytes){
+    if(bytes === 0) return '0 B';
+    if(!bytes && bytes !== 0) return '—';
+    const units=['B','KB','MB','GB','TB']; let i=0; let n=Number(bytes);
+    while(n>=1024 && i<units.length-1){ n/=1024; i++; }
+    return (n>=10 || i===0 ? n.toFixed(0) : n.toFixed(1))+' '+units[i];
+  }
+  function fmtUptime(seconds){
+    seconds = Number(seconds||0); if(seconds <= 0) return '—';
+    const d=Math.floor(seconds/86400); seconds%=86400;
+    const h=Math.floor(seconds/3600); seconds%=3600;
+    const m=Math.floor(seconds/60);
+    if(d) return d+'d '+h+'h'; if(h) return h+'h '+m+'m'; return m+'m';
+  }
+
+  function renderOfflineStats(){
+    const offlineText = 'Server offline';
+    [['tpsVal',offlineText],['msptVal',offlineText],['playersVal',offlineText],['uptimeVal',offlineText],['dashTps','Offline']].forEach(([id,text])=>{ const el=document.getElementById(id); if(el){ el.textContent=text; el.className=el.className.replace(/\bgood\b|\bwarn\b/g,''); } });
+    const dashPlayers = document.getElementById('dashPlayers'); if(dashPlayers) dashPlayers.textContent = 'Offline';
+    const dashTpsBadge = document.getElementById('dashTpsBadge'); if(dashTpsBadge){ dashTpsBadge.textContent='OFFLINE'; dashTpsBadge.className='badge off'; }
+    const cpuText=document.getElementById('cpuText'), memText=document.getElementById('memText'), diskText=document.getElementById('diskText');
+    if(cpuText) cpuText.textContent='Server offline'; if(memText) memText.textContent='Server offline'; if(diskText) diskText.textContent='Server offline';
+  }
+
+  function renderOnlineStats(st){
+    const players = (st.playersMax && st.playersMax > 0) ? `${st.playersOnline || 0} / ${st.playersMax}` : `${st.playersOnline || 0}`;
+    const uptime = fmtUptime(st.uptimeSeconds);
+    const tps = st.rconAvailable ? 'Online' : 'RCON down';
+    const tpsVal=document.getElementById('tpsVal'); if(tpsVal){ tpsVal.textContent=tps; tpsVal.className='v '+(st.rconAvailable?'good':'warn'); }
+    const msptVal=document.getElementById('msptVal'); if(msptVal) msptVal.textContent = st.managedByConsole ? 'Managed' : 'Detected';
+    const playersVal=document.getElementById('playersVal'); if(playersVal) playersVal.textContent=players;
+    const uptimeVal=document.getElementById('uptimeVal'); if(uptimeVal) uptimeVal.textContent=uptime;
+    const dashTps=document.getElementById('dashTps'); if(dashTps) dashTps.textContent=tps;
+    const dashTpsBadge=document.getElementById('dashTpsBadge'); if(dashTpsBadge){ dashTpsBadge.textContent=st.rconAvailable?'ONLINE':'NO RCON'; dashTpsBadge.className='badge '+(st.rconAvailable?'on':'off'); }
+    const dashPlayers=document.getElementById('dashPlayers'); if(dashPlayers) dashPlayers.innerHTML = `${st.playersOnline || 0} <span style="font-size:13px;color:var(--text-faint);font-weight:500;">/ ${st.playersMax || '?'}</span>`;
+    const dashUptime=document.getElementById('dashUptime'); if(dashUptime) dashUptime.textContent=uptime;
+    const cpuText=document.getElementById('cpuText'); if(cpuText) cpuText.textContent=(st.cpuPercent || 0).toFixed(0)+'%';
+    const memText=document.getElementById('memText'); if(memText) memText.textContent=((st.memoryUsedMb || 0)/1024).toFixed(1)+' GB';
+    const memSub=document.getElementById('memSub'); if(memSub) memSub.textContent='of '+((st.memoryTotalMb || 0)/1024).toFixed(1)+' GB';
+    const diskText=document.getElementById('diskText'); if(diskText) diskText.textContent=(st.diskUsedGb || 0).toFixed(1)+' GB';
+    const diskSub=document.getElementById('diskSub'); if(diskSub) diskSub.textContent='of '+(st.diskTotalGb || 0).toFixed(1)+' GB';
+  }
+
+  async function refreshBackendStatus(){
+    try{
+      backendStatus = await api('/api/status');
+      if(backendStatus.running){ applyState('online'); renderOnlineStats(backendStatus); }
+      else { applyState('offline'); renderOfflineStats(); }
+    }catch(err){ applyState('offline'); renderOfflineStats(); }
+  }
+  function startStatusPolling(){ if(statusTimer) return; refreshBackendStatus(); statusTimer=setInterval(refreshBackendStatus, 2000); }
+
+  const loginBtn = document.getElementById('loginSubmit');
+  if(loginBtn){
+    loginBtn.addEventListener('click', async function(e){
+      e.preventDefault(); e.stopImmediatePropagation();
+      try{
+        const data = await api('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({username:loginUserInput.value.trim(), password:loginPassInput.value})});
+        loginError.classList.remove('show'); loginScreen.style.display = 'none'; appShell.style.display = 'flex';
+        document.getElementById('sessionUser').textContent = data.user;
+        document.getElementById('sessionAvatar').textContent = data.user.slice(0,2).toUpperCase();
+        const dashName = document.getElementById('dashUserName'); if(dashName) dashName.textContent = data.user;
+        connectLogs(); startStatusPolling(); renderFiles(); renderBackups(); show('Welcome back, '+data.user);
+      }catch(err){ loginError.textContent = 'Backend login failed: '+err.message; loginError.classList.add('show'); loginPassInput.value=''; loginPassInput.focus(); }
+    }, true);
+  }
+  [loginUserInput, loginPassInput].forEach(inp=>inp && inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); loginBtn.click(); } }, true));
+
+  async function postAction(path, label){ try{ await api(path, {method:'POST'}); show(label); setTimeout(refreshBackendStatus, 800); } catch(err){ show(label+' failed: '+err.message); } }
+  [['btnStart','/api/server/start','Server start requested'],['btnStop','/api/server/stop','Server stop requested'],['btnRestart','/api/server/restart','Server restart requested']]
+    .forEach(([id,path,label])=>{ const el=document.getElementById(id); if(el) el.addEventListener('click', e=>{ e.preventDefault(); e.stopImmediatePropagation(); postAction(path,label); }, true); });
+
+  async function backendCommand(e){
+    if(e){ e.preventDefault(); e.stopImmediatePropagation(); }
+    const inp=document.getElementById('cmdInput'); const val=inp.value.trim(); if(!val) return;
+    pushLog('CMD','> '+val); inp.value='';
+    try{ await api('/api/console/command', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({command:val})}); }
+    catch(err){ pushLog('ERROR','Backend command failed: '+err.message); }
+  }
+  const sendBtn=document.getElementById('cmdSend'); if(sendBtn) sendBtn.addEventListener('click', backendCommand, true);
+  const cmdInput=document.getElementById('cmdInput'); if(cmdInput) cmdInput.addEventListener('keydown', e=>{ if(e.key==='Enter') backendCommand(e); }, true);
+
+  function connectLogs(){
+    if(logStream) return;
+    logStream = new EventSource('/ws/logs', {withCredentials:true});
+    logStream.onmessage = ev => { try{ const msg=JSON.parse(ev.data); pushLog('INFO', msg.line); }catch(_){ pushLog('INFO', ev.data); } };
+    logStream.onerror = () => { logStream.close(); logStream=null; setTimeout(()=>{ if(appShell.style.display !== 'none') connectLogs(); }, 2000); };
+  }
+
+  const oldRenderFiles = window.renderFiles;
+  window.renderFiles = async function(){
+    const body=document.getElementById('fileBody'); if(!body) return;
+    try{
+      const items = await api('/api/files?path='+encodeURIComponent(curPath || '/'));
+      body.innerHTML='';
+      items.forEach(it=>{
+        const tr=document.createElement('tr'); tr.className='file-row';
+        tr.innerHTML = `<td><div class="file-name">${it.type==='dir'?folderIcon:fileIcon}${it.name}</div></td><td class="file-meta">${it.type==='dir'?'—':fmtBytes(it.size)}</td><td class="file-meta">${new Date(it.modified).toLocaleString()}</td><td style="text-align:right;"><button class="btn btn-sm btn-ghost">${it.type==='dir'?'Open':'View'}</button></td>`;
+        tr.addEventListener('click',()=>{ if(it.type==='dir'){ curPath = it.path || ((curPath==='/'?'':curPath)+'/'+it.name); renderFiles(); renderCrumb(); } });
+        body.appendChild(tr);
+      });
+      if(items.length===0) body.innerHTML = `<tr><td colspan="4" style="color:var(--text-faint);padding:22px 10px;text-align:center;">This folder is empty.</td></tr>`;
+    }catch(err){ if(oldRenderFiles) oldRenderFiles(); show('File listing failed: '+err.message); }
+  };
+
+  const uploadBtn=document.getElementById('uploadBtn');
+  if(uploadBtn){ uploadBtn.addEventListener('click', e=>{ e.preventDefault(); e.stopImmediatePropagation(); const input=document.createElement('input'); input.type='file'; input.multiple=true; input.onchange=async()=>{ const fd=new FormData(); [...input.files].forEach(f=>fd.append('files',f)); fd.append('path',curPath||'/'); try{ await api('/api/files/upload',{method:'POST',body:fd}); show('Upload complete'); renderFiles(); }catch(err){ show('Upload failed: '+err.message); } }; input.click(); }, true); }
+
+  const oldRenderBackups = window.renderBackups;
+  window.renderBackups = async function(){
+    const list=document.getElementById('backupList'); if(!list) return;
+    try{
+      const rows = await api('/api/backups'); list.innerHTML='';
+      rows.forEach(b=>{ const row=document.createElement('div'); row.className='row-card'; row.innerHTML=`<div class="row-left"><div class="row-icon">${backupIcon()}</div><div><div class="row-title">${b.name}</div><div class="row-sub">${new Date(b.modified).toLocaleString()} · ${fmtBytes(b.size)}</div></div></div><div class="row-actions"><span class="badge on">READY</span></div>`; list.appendChild(row); });
+      if(rows.length===0) list.innerHTML='<div class="note">No backups have been created yet.</div>';
+    }catch(err){ if(oldRenderBackups) oldRenderBackups(); }
+  };
+  const createBackupBtn=document.getElementById('createBackupBtn');
+  if(createBackupBtn){ createBackupBtn.addEventListener('click', async e=>{ e.preventDefault(); e.stopImmediatePropagation(); show('Backup started'); try{ await api('/api/backups/create',{method:'POST'}); show('Backup complete'); renderBackups(); }catch(err){ show('Backup failed: '+err.message); } }, true); }
+
+  async function searchPlugins(){
+    const q=document.getElementById('pluginSearch')?.value.trim() || ''; const catalog=document.getElementById('pluginCatalog'); if(!catalog || !q) return;
+    catalog.innerHTML='<div class="note">Searching Modrinth...</div>';
+    try{
+      const hits=await api('/api/plugins/search?q='+encodeURIComponent(q)); catalog.innerHTML='';
+      hits.forEach(p=>{ const card=document.createElement('div'); card.className='plugin-card'; card.innerHTML=`<div class="plugin-card-top"><div class="plugin-icon">${(p.title||p.slug||'?').slice(0,2).toUpperCase()}</div><div><div class="plugin-name">${p.title||p.slug}</div><div class="plugin-author">${p.slug||p.project_id}</div></div></div><div class="plugin-desc">${p.description||''}</div><div class="plugin-card-foot"><button class="btn btn-sm btn-primary">Install</button></div>`; card.querySelector('button').addEventListener('click',async()=>{ try{ await api('/api/plugins/install',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({project:p.slug||p.project_id})}); show((p.title||p.slug)+' installed. Restart may be required.'); }catch(err){ show('Install failed: '+err.message); } }); catalog.appendChild(card); });
+      if(hits.length===0) catalog.innerHTML='<div class="note">No Modrinth plugins found.</div>';
+    }catch(err){ catalog.innerHTML='<div class="note">Modrinth search failed: '+err.message+'</div>'; }
+  }
+  const pluginSearch=document.getElementById('pluginSearch'); if(pluginSearch){ pluginSearch.addEventListener('input',()=>{ clearTimeout(pluginSearchTimer); pluginSearchTimer=setTimeout(searchPlugins,350); }); }
+
+  renderOfflineStats(); applyState('offline');
+})();
+</script>
+
 </body>
 </html>

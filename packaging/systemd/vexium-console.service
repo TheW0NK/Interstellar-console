@@ -1,0 +1,17 @@
+[Unit]
+Description=Vexium / Interstellar Minecraft Console
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=minecraft
+Group=minecraft
+WorkingDirectory=/srv/vexium
+ExecStart=/srv/vexium/vexium-console
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target
