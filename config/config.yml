@@ -1,0 +1,65 @@
+# =============================================================================
+# Vexium Panel — configuration
+# Edit this file to match your setup, then (re)start the panel.
+# =============================================================================
+
+panel:
+  # Interface to bind the web server to. Keep this 127.0.0.1 unless you're
+  # putting a reverse proxy in front of it, or you actually want it reachable
+  # over the LAN.
+  bind: "127.0.0.1"
+  port: 8080
+  # Random string used to sign session cookies. Change this to something
+  # random before you expose the panel to anyone.
+  sessionSecret: "CHANGE_ME_TO_A_RANDOM_STRING"
+
+server:
+  # Absolute path to the folder containing paper.jar, world folders, plugins/, etc.
+  directory: "/path/to/your/server"
+  jarFile: "paper.jar"
+  javaBin: "java"
+  # JVM flags, applied before -jar
+  javaArgs:
+    - "-Xms4G"
+    - "-Xmx8G"
+    - "-XX:+UseG1GC"
+  # Args applied after the jar file name
+  extraArgs:
+    - "nogui"
+
+rcon:
+  # Must match server.properties: enable-rcon=true, rcon.port, rcon.password
+  host: "127.0.0.1"
+  port: 25575
+  password: "CHANGE_ME"
+
+sftp:
+  # Purely informational — this panel does not manage SFTP/SSH itself.
+  # Fill these in to match whatever SFTP/SSH server is actually running on
+  # this box (e.g. the OS's sshd). Password is intentionally not stored here.
+  host: "your.server.hostname"
+  port: 22
+  username: "your-username"
+
+backups:
+  directory: "./data/backups"
+  # Paths relative to server.directory that get included in each backup
+  include:
+    - "world"
+    - "world_nether"
+    - "world_the_end"
+    - "plugins"
+
+schedules:
+  file: "./data/schedules.json"
+
+activity:
+  file: "./data/activity.yml"
+
+branding:
+  # Server display name and icon shown in the panel. Editable from the
+  # MC Configuration tab, or by hand here / in branding.yml.
+  file: "./config/branding.yml"
+
+users:
+  file: "./config/users.yml"
