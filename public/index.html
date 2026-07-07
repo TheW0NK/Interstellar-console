@@ -1,0 +1,1880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server Control</title>
+<link rel="icon" id="faviconLink" href="data:,">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg:#0B0E11;
+  --surface:#12161B;
+  --surface-2:#181D24;
+  --surface-3:#1F252D;
+  --border:#252B34;
+  --border-soft:#1C222A;
+  --text:#E8E6E1;
+  --text-dim:#8B93A1;
+  --text-faint:#565E6B;
+  --ember:#FF8A3D;
+  --ember-dim:#8A4F26;
+  --green:#5FBF9F;
+  --red:#E5595E;
+  --yellow:#E3B341;
+  --blue:#5B9DD9;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  display:flex;
+  height:100vh;
+  overflow:hidden;
+  font-size:14px;
+}
+::-webkit-scrollbar{width:9px;height:9px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:5px;}
+::-webkit-scrollbar-thumb:hover{background:var(--border);}
+
+.sidebar{
+  width:220px;
+  min-width:220px;
+  background:var(--surface);
+  border-right:1px solid var(--border-soft);
+  display:flex;
+  flex-direction:column;
+  padding:18px 12px;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:6px 8px 20px 8px;
+  border-bottom:1px solid var(--border-soft);
+  margin-bottom:14px;
+}
+.brand-mark{
+  width:30px;height:30px;border-radius:7px;
+  background:linear-gradient(150deg,var(--ember),#C4581C);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-weight:700;font-size:14px;color:#0B0E11;
+  flex-shrink:0;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.15;}
+.brand-text b{font-size:14.5px;letter-spacing:.3px;}
+.brand-text span{font-size:10.5px;color:var(--text-faint);font-family:var(--mono);}
+
+.nav{display:flex;flex-direction:column;gap:2px;flex:1;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border-radius:7px;
+  color:var(--text-dim);cursor:pointer;
+  font-size:13.2px;font-weight:500;
+  border:1px solid transparent;
+  transition:background .12s,color .12s;
+  user-select:none;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--surface-2);color:var(--text);}
+.nav-item.active{
+  background:var(--surface-2);
+  color:var(--text);
+  border-color:var(--border);
+}
+.nav-item.active svg{opacity:1;color:var(--ember);}
+.nav-item.active{box-shadow:inset 2px 0 0 var(--ember);}
+
+.sidebar-foot{
+  border-top:1px solid var(--border-soft);
+  padding-top:12px;
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--text-faint);
+  display:flex;justify-content:space-between;
+}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 26px;
+  border-bottom:1px solid var(--border-soft);
+  flex-shrink:0;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar h1{font-size:17px;font-weight:600;letter-spacing:.2px;}
+.status-pill{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:11px;font-weight:600;
+  padding:4px 10px 4px 8px;border-radius:20px;
+  background:rgba(95,191,159,.12);color:var(--green);
+  border:1px solid rgba(95,191,159,.25);
+}
+.status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+.status-pill.st-offline{background:rgba(139,147,161,.1);color:var(--text-faint);border-color:var(--border);}
+.status-pill.st-offline .dot{background:var(--text-faint);box-shadow:none;animation:none;}
+.status-pill.st-transit{background:rgba(227,179,65,.12);color:var(--yellow);border-color:rgba(227,179,65,.25);}
+.status-pill.st-transit .dot{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.power-group{display:flex;align-items:center;gap:6px;margin-left:4px;padding-left:16px;border-left:1px solid var(--border-soft);}
+.power-btn{
+  display:flex;align-items:center;gap:6px;
+  font-family:var(--sans);font-size:12px;font-weight:600;
+  padding:7px 11px;border-radius:7px;border:1px solid var(--border);
+  background:var(--surface-2);color:var(--text-dim);cursor:pointer;
+  transition:filter .1s, opacity .1s, transform .05s;
+}
+.power-btn svg{width:14px;height:14px;}
+.power-btn:hover:not(:disabled){filter:brightness(1.25);}
+.power-btn:active:not(:disabled){transform:scale(.95);}
+.power-btn:disabled{opacity:.32;cursor:not-allowed;}
+.power-btn.pb-start{color:var(--green);}
+.power-btn.pb-restart{color:var(--blue);}
+.power-btn.pb-stop{color:var(--yellow);}
+.power-btn.pb-kill{color:var(--red);border-color:rgba(229,89,94,.35);}
+.power-btn.pb-kill:hover:not(:disabled){background:rgba(229,89,94,.12);}
+
+.topbar-stats{display:flex;gap:22px;}
+.tstat{text-align:right;}
+.tstat .v{font-family:var(--mono);font-size:15px;font-weight:600;}
+.tstat .l{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;margin-top:1px;}
+.tstat .v.good{color:var(--green);}
+.tstat .v.warn{color:var(--yellow);}
+
+.content{flex:1;overflow-y:auto;padding:22px 26px 10px 26px;}
+.panel{display:none;animation:fade .18s ease;}
+.panel.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(3px);}to{opacity:1;transform:translateY(0);}}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.section-head h2{font-size:15px;font-weight:600;}
+.section-head p{font-size:12px;color:var(--text-dim);margin-top:2px;}
+
+.card{
+  background:var(--surface);
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  padding:18px;
+}
+
+.btn{
+  font-family:var(--sans);
+  font-size:12.5px;font-weight:600;
+  padding:8px 14px;border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  color:var(--text);
+  cursor:pointer;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:filter .1s, transform .05s;
+}
+.btn:hover{filter:brightness(1.2);}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--ember);color:#0B0E11;border-color:var(--ember);}
+.btn-danger{background:transparent;color:var(--red);border-color:rgba(229,89,94,.4);}
+.btn-danger:hover{background:rgba(229,89,94,.1);}
+.btn-ghost{background:transparent;}
+.btn-sm{padding:5px 10px;font-size:11.5px;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.console-wrap{
+  background:#08090B;border:1px solid var(--border-soft);border-radius:10px;
+  height:calc(100vh - 430px);min-height:280px;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.console-toolbar{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;border-bottom:1px solid var(--border-soft);
+  background:var(--surface);
+}
+.console-toolbar .tag{font-family:var(--mono);font-size:11px;color:var(--text-faint);}
+.console-log{
+  flex:1;overflow-y:auto;padding:12px 16px;
+  font-family:var(--mono);font-size:12.3px;line-height:1.75;
+}
+.log-line{white-space:pre-wrap;word-break:break-word;}
+.log-time{color:var(--text-faint);margin-right:8px;}
+.log-INFO{color:var(--text-dim);}
+.log-WARN{color:var(--yellow);}
+.log-ERROR{color:var(--red);}
+.log-CMD{color:var(--blue);}
+.log-tag{color:var(--green);}
+.console-input-row{
+  display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border-soft);background:var(--surface);
+}
+.console-input-row input{
+  flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);font-family:var(--mono);font-size:12.5px;padding:9px 12px;outline:none;
+}
+.console-input-row input:focus{border-color:var(--ember-dim);}
+
+.breadcrumb{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12.5px;color:var(--text-dim);margin-bottom:12px;}
+.breadcrumb span.seg{cursor:pointer;}
+.breadcrumb span.seg:hover{color:var(--ember);}
+.breadcrumb .sep{color:var(--text-faint);}
+.file-table{width:100%;border-collapse:collapse;}
+.file-table th{
+  text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--text-faint);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--border-soft);
+}
+.file-table td{padding:9px 10px;border-bottom:1px solid var(--border-soft);font-size:13px;}
+.file-table tr:hover td{background:var(--surface-2);}
+.file-row{cursor:pointer;}
+.file-name{display:flex;align-items:center;gap:9px;}
+.file-icon{width:15px;height:15px;flex-shrink:0;color:var(--text-faint);}
+.file-icon.folder{color:var(--ember);}
+.file-meta{color:var(--text-faint);font-family:var(--mono);font-size:11.5px;}
+
+.list{display:flex;flex-direction:column;gap:8px;}
+.row-card{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:9px;
+  padding:12px 16px;
+}
+.row-left{display:flex;align-items:center;gap:12px;}
+.row-icon{
+  width:34px;height:34px;border-radius:8px;background:var(--surface-3);
+  display:flex;align-items:center;justify-content:center;color:var(--ember);flex-shrink:0;
+}
+.row-title{font-size:13.3px;font-weight:600;}
+.row-sub{font-size:11.5px;color:var(--text-faint);font-family:var(--mono);margin-top:2px;}
+.row-actions{display:flex;gap:6px;align-items:center;}
+.badge{font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:20px;font-weight:600;}
+.badge.on{background:rgba(95,191,159,.12);color:var(--green);}
+.badge.off{background:rgba(139,147,161,.12);color:var(--text-faint);}
+.toggle{
+  width:34px;height:19px;border-radius:20px;background:var(--surface-3);border:1px solid var(--border);
+  position:relative;cursor:pointer;flex-shrink:0;transition:background .15s;
+}
+.toggle.on{background:var(--ember-dim);border-color:var(--ember);}
+.toggle::after{
+  content:'';position:absolute;top:2px;left:2px;width:13px;height:13px;border-radius:50%;
+  background:var(--text-faint);transition:transform .15s, background .15s;
+}
+.toggle.on::after{transform:translateX(15px);background:var(--ember);}
+
+.task-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;}
+.task-tile{
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;
+  padding:16px;cursor:pointer;transition:border-color .12s, transform .06s;
+  display:flex;flex-direction:column;gap:10px;
+}
+.task-tile:hover{border-color:var(--border);transform:translateY(-1px);}
+.task-tile:active{transform:scale(.98);}
+.task-tile .ti{width:30px;height:30px;color:var(--ember);}
+.task-tile .tt{font-size:13px;font-weight:600;}
+.task-tile .td{font-size:11.5px;color:var(--text-faint);line-height:1.4;}
+.task-tile.danger .ti{color:var(--red);}
+.broadcast-row{display:flex;gap:8px;margin-top:16px;}
+.broadcast-row input{
+  flex:1;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  color:var(--text);padding:9px 12px;font-size:13px;outline:none;
+}
+
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+.config-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 4px;border-bottom:1px solid var(--border-soft);
+}
+.config-row:last-child{border-bottom:none;}
+.config-row-label{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
+.config-row-key{font-family:var(--mono);font-size:12.3px;color:var(--text);word-break:break-all;}
+.config-row-section{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;}
+.config-row input{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:7px 10px;color:var(--text);font-size:12.5px;font-family:var(--mono);outline:none;
+  width:220px;flex-shrink:0;
+}
+.config-section-divider{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ember);
+  padding:14px 4px 6px 4px;
+}
+.config-section-divider:first-child{padding-top:4px;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:11.5px;color:var(--text-dim);font-weight:600;}
+.field input[type=text],.field input[type=number],.field select{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:9px 11px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;
+}
+.field input:focus,.field select:focus{border-color:var(--ember-dim);}
+.field-row-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:7px;padding:10px 12px;
+}
+.field-row-toggle span{font-size:12.8px;}
+.config-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);}
+
+.player-toolbar{display:flex;justify-content:space-between;margin-bottom:12px;gap:10px;}
+.player-toolbar input{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:8px 12px;color:var(--text);font-size:12.8px;width:220px;outline:none;
+}
+.avatar{
+  width:28px;height:28px;border-radius:6px;
+  background:linear-gradient(145deg,var(--surface-3),var(--surface-2));
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ember);
+  border:1px solid var(--border);
+}
+.rank-owner{color:#FF8A3D;}
+.rank-admin{color:#E5595E;}
+.rank-moderator{color:#5B9DD9;}
+.rank-member{color:var(--text-dim);}
+
+.login-screen{
+  position:fixed;inset:0;z-index:200;
+  background:radial-gradient(circle at 30% 20%, #1a1410 0%, var(--bg) 55%);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card{
+  width:360px;background:var(--surface);border:1px solid var(--border-soft);
+  border-radius:14px;padding:30px 28px 26px 28px;
+  box-shadow:0 30px 80px rgba(0,0,0,.5);
+}
+.login-brand{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.login-card h2{font-size:19px;font-weight:700;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--text-dim);line-height:1.55;margin-bottom:22px;}
+.login-card .field label{display:block;margin-bottom:6px;}
+.login-card .field input{
+  width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:10px 12px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;
+}
+.login-card .field input:focus{border-color:var(--ember-dim);}
+.login-error{
+  display:none;font-size:12px;color:var(--red);background:rgba(229,89,94,.1);
+  border:1px solid rgba(229,89,94,.3);border-radius:7px;padding:8px 11px;margin-top:14px;
+}
+.login-error.show{display:block;}
+.login-card.shake{animation:shake .35s;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+#appShell{display:none;flex:1;min-width:0;height:100%;}
+
+.session-row{
+  display:flex;align-items:center;gap:9px;border-top:1px solid var(--border-soft);
+  margin-top:12px;padding-top:12px;
+}
+.session-info{display:flex;flex-direction:column;line-height:1.2;flex:1;min-width:0;}
+.session-info b{font-size:12.5px;}
+.session-info span{font-size:10.5px;color:var(--text-faint);}
+.logout-btn{
+  background:transparent;border:1px solid var(--border);border-radius:7px;color:var(--text-faint);
+  padding:6px;cursor:pointer;display:flex;align-items:center;flex-shrink:0;
+}
+.logout-btn svg{width:14px;height:14px;}
+.logout-btn:hover{color:var(--red);border-color:rgba(229,89,94,.4);}
+
+.role-badge{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
+.role-owner{background:rgba(255,138,61,.14);color:var(--ember);}
+.role-admin{background:rgba(229,89,94,.14);color:var(--red);}
+.role-moderator{background:rgba(91,157,217,.14);color:var(--blue);}
+.admin-form{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px;}
+.admin-form .field label{font-size:11px;}
+.admin-form input, .admin-form select{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:9px 11px;color:var(--text);font-size:12.8px;font-family:var(--mono);outline:none;width:100%;
+}
+.dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
+.dash-stat{padding:15px 16px;}
+.dash-stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.dash-stat-val{font-family:var(--mono);font-size:24px;font-weight:700;line-height:1;}
+.dash-avatars{display:flex;margin-top:12px;}
+.dash-avatars .avatar{margin-right:-8px;border:2px solid var(--surface);width:26px;height:26px;font-size:9.5px;}
+.dash-cols{display:grid;grid-template-columns:1fr 1.4fr;gap:14px;}
+.dash-actions{display:flex;flex-direction:column;gap:8px;}
+.dash-actions .btn{justify-content:flex-start;width:100%;}
+.dash-feed{display:flex;flex-direction:column;gap:11px;max-height:260px;overflow-y:auto;}
+.feed-item{display:flex;gap:10px;font-size:12.3px;}
+.feed-dot{width:6px;height:6px;border-radius:50%;background:var(--ember);flex-shrink:0;margin-top:5px;}
+.feed-text{color:var(--text-dim);line-height:1.5;}
+.feed-text b{color:var(--text);font-weight:600;}
+.feed-time{color:var(--text-faint);font-family:var(--mono);font-size:10.5px;margin-left:auto;flex-shrink:0;white-space:nowrap;}
+.empty-state{color:var(--text-faint);font-size:12.5px;text-align:center;padding:26px 10px;}
+
+.installer-toolbar{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.installer-toolbar input{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:10px 13px;color:var(--text);font-size:13px;outline:none;width:100%;
+}
+.plugin-catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+.plugin-card{
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;
+  padding:15px;display:flex;flex-direction:column;gap:8px;
+}
+.plugin-card-top{display:flex;gap:10px;align-items:flex-start;}
+.plugin-icon{
+  width:36px;height:36px;border-radius:8px;background:var(--surface-3);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;font-size:14px;color:var(--ember);
+  object-fit:cover;
+}
+.plugin-name{font-size:13.3px;font-weight:600;}
+.plugin-author{font-size:11px;color:var(--text-faint);font-family:var(--mono);}
+.plugin-desc{font-size:12px;color:var(--text-dim);line-height:1.5;flex:1;}
+.plugin-meta{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--text-faint);font-family:var(--mono);}
+.plugin-card-foot{display:flex;gap:8px;margin-top:2px;}
+.plugin-card-foot .btn{flex:1;justify-content:center;}
+
+.sftp-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.kv{
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:9px;padding:13px 15px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.kv .k{font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;}
+.kv-val-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.kv .v{font-family:var(--mono);font-size:14px;font-weight:600;}
+.copy-btn{
+  background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-faint);
+  cursor:pointer;padding:5px 7px;display:flex;align-items:center;
+}
+.copy-btn:hover{color:var(--ember);border-color:var(--ember-dim);}
+.copy-btn.copied{color:var(--green);border-color:var(--green);}
+.note{
+  margin-top:14px;font-size:12px;color:var(--text-dim);background:var(--surface-2);
+  border:1px solid var(--border-soft);border-radius:8px;padding:11px 14px;line-height:1.6;
+}
+.note b{color:var(--text);}
+
+.resfoot{
+  flex-shrink:0;border-top:1px solid var(--border-soft);background:var(--surface);
+  padding:14px 26px 16px 26px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
+}
+.res-card{
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:10px;
+  padding:12px 14px 8px 14px;position:relative;overflow:hidden;
+}
+.res-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;}
+.res-label{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+.res-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.res-right{text-align:right;}
+.res-now{font-family:var(--mono);font-size:19px;font-weight:700;line-height:1;}
+.res-sub{font-family:var(--mono);font-size:10px;color:var(--text-faint);margin-top:3px;}
+.res-graph{width:100%;height:46px;display:block;margin-top:6px;}
+
+.toast-wrap{position:fixed;bottom:98px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:99;}
+.toast{
+  background:var(--surface-3);border:1px solid var(--border);border-left:3px solid var(--ember);
+  border-radius:7px;padding:10px 16px;font-size:12.5px;box-shadow:0 8px 22px rgba(0,0,0,.4);
+  animation:toastin .2s ease;
+}
+@keyframes toastin{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;display:flex;align-items:center;justify-content:center;}
+.modal-box{width:min(420px,90vw);background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;padding:20px;}
+.modal-box h3{font-size:14.5px;margin-bottom:14px;}
+.modal-box .field{margin-bottom:12px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark" id="loginBrandMark">V</div>
+      <div class="brand-text"><b class="brand-name">Server</b><span>Server Control</span></div>
+    </div>
+    <h2>Sign in</h2>
+    <p class="login-sub">Local/authorized access only — sign in to continue.</p>
+    <form id="loginForm" onsubmit="return false;">
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="loginUser" autocomplete="username" placeholder="Username" required>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>Password</label>
+        <input type="password" id="loginPass" autocomplete="current-password" placeholder="••••••••••••" required>
+      </div>
+      <div class="login-error" id="loginError">Incorrect username or password.</div>
+      <button type="button" class="btn btn-primary" id="loginSubmit" style="width:100%;justify-content:center;margin-top:16px;padding:11px;">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<div id="appShell">
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-mark" id="sidebarBrandMark">V</div>
+    <div class="brand-text"><b class="brand-name">Server</b><span id="brandHost">—</span></div>
+  </div>
+  <div class="nav" id="nav">
+    <div class="nav-item active" data-tab="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
+    <div class="nav-item" data-tab="console"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v14H4z"/><path d="M8 9l3 3-3 3M13 15h4"/></svg>Console</div>
+    <div class="nav-item" data-tab="files"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6a1 1 0 011-1h5l2 2h9a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg>Files</div>
+    <div class="nav-item" data-tab="backups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Backups</div>
+    <div class="nav-item" data-tab="schedules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Schedules</div>
+    <div class="nav-item" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>Quick Tasks</div>
+    <div class="nav-item" data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.56-1.04H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001.04-1.56V3a2 2 0 014 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.56 1.04H21a2 2 0 010 4h-.09A1.7 1.7 0 0019.4 15z"/></svg><span id="navConfigLabel">MC Configuration</span></div>
+    <div class="nav-item" data-tab="plugins-installed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v2H6a1 1 0 00-1 1v3H3a3 3 0 000 6h2v3a1 1 0 001 1h3v-2a3 3 0 016 0v2h3a1 1 0 001-1v-3h2a3 3 0 000-6h-2V8a1 1 0 00-1-1h-3V5a3 3 0 00-3-3z"/></svg>Installed Plugins</div>
+    <div class="nav-item" data-tab="plugins-installer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/><circle cx="17.5" cy="17.5" r="3.5" fill="var(--surface-2)"/><path d="M17.5 16v3M16 17.5h3"/></svg>Plugin Installer</div>
+    <div class="nav-item" data-tab="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M22 20c0-2.9-1.9-5.4-4.6-6.4"/></svg>Player Manager</div>
+    <div class="nav-item" data-tab="sftp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>SFTP Info</div>
+    <div class="nav-item" data-tab="admins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 8.2-7 9-4-.8-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Administrator Management</div>
+  </div>
+  <div class="sidebar-foot"><span id="footVersion">—</span><span id="footNode">—</span></div>
+  <div class="session-row">
+    <div class="avatar" id="sessionAvatar">—</div>
+    <div class="session-info"><b id="sessionUser">—</b><span id="sessionRole">—</span></div>
+    <button class="logout-btn" id="logoutBtn" title="Sign out">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+    </button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="pageTitle">Dashboard</h1>
+      <div class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">OFFLINE</span></div>
+      <div class="power-group">
+        <button class="power-btn pb-start" id="btnStart" disabled title="Start the server">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 4l14 8-14 8V4z"/></svg>Start
+        </button>
+        <button class="power-btn pb-restart" id="btnRestart" title="Graceful restart">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-5M20 14a8 8 0 01-14 5"/></svg>Restart
+        </button>
+        <button class="power-btn pb-stop" id="btnStop" title="Graceful stop">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>Stop
+        </button>
+        <button class="power-btn pb-kill" id="btnKill" title="Force kill the process">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6L6 18M6 6l12 12"/></svg>Kill
+        </button>
+      </div>
+    </div>
+    <div class="topbar-stats">
+      <div class="tstat"><div class="v" id="tpsVal">—</div><div class="l">TPS</div></div>
+      <div class="tstat"><div class="v" id="msptVal">—</div><div class="l">MSPT</div></div>
+      <div class="tstat"><div class="v" id="playersVal">—</div><div class="l">Players</div></div>
+      <div class="tstat"><div class="v" id="uptimeVal">—</div><div class="l">Uptime</div></div>
+    </div>
+  </div>
+
+  <div class="content" id="content">
+
+    <div class="panel active" id="tab-dashboard">
+      <div class="section-head">
+        <div><h2>Welcome back, <span id="dashUserName">—</span></h2><p>Here's what's happening on <span class="brand-name">your server</span> right now</p></div>
+      </div>
+      <div class="dash-grid">
+        <div class="card dash-stat">
+          <div class="dash-stat-top"><span class="res-label">TPS</span><span class="badge off" id="dashTpsBadge">—</span></div>
+          <div class="dash-stat-val" id="dashTps">—</div>
+          <div class="res-sub" id="dashMspt" style="margin-top:8px;">MSPT: —</div>
+        </div>
+        <div class="card dash-stat">
+          <div class="dash-stat-top"><span class="res-label">Players Online</span></div>
+          <div class="dash-stat-val" id="dashPlayers">—</div>
+          <div class="dash-avatars" id="dashAvatars"></div>
+        </div>
+        <div class="card dash-stat">
+          <div class="dash-stat-top"><span class="res-label">Uptime</span></div>
+          <div class="dash-stat-val" id="dashUptime">—</div>
+          <div class="res-sub" id="dashLastRestart" style="margin-top:8px;">Last restart: —</div>
+        </div>
+        <div class="card dash-stat">
+          <div class="dash-stat-top"><span class="res-label">Version</span></div>
+          <div class="dash-stat-val" id="dashVersion" style="font-size:16px;">—</div>
+          <div class="res-sub" id="dashBuild" style="margin-top:8px;">—</div>
+        </div>
+      </div>
+      <div class="dash-cols">
+        <div class="card">
+          <div class="section-head" style="margin-bottom:12px;"><div><h2 style="font-size:13.5px;">Quick actions</h2></div></div>
+          <div class="dash-actions">
+            <button class="btn btn-sm" data-jump="tasks">Quick Tasks</button>
+            <button class="btn btn-sm" data-jump="backups">Create Backup</button>
+            <button class="btn btn-sm" data-jump="plugins-installer">Install Plugin</button>
+            <button class="btn btn-sm" data-jump="players">Manage Players</button>
+            <button class="btn btn-sm" data-jump="console">Open Console</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="section-head" style="margin-bottom:10px;"><div><h2 style="font-size:13.5px;">Recent activity</h2></div></div>
+          <div class="dash-feed" id="dashFeed"><div class="empty-state">No activity yet.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-console">
+      <div class="section-head">
+        <div><h2>Live Console</h2><p>Streaming from paper.jar's stdout, commands sent to its stdin</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" id="autoscrollBtn">⏷ Autoscroll: On</button>
+          <button class="btn btn-sm btn-ghost" id="clearConsoleBtn">Clear</button>
+        </div>
+      </div>
+      <div class="console-wrap">
+        <div class="console-toolbar">
+          <span class="tag">stdout — live process output</span>
+          <span class="tag" id="lineCount">0 lines</span>
+        </div>
+        <div class="console-log" id="consoleLog"></div>
+        <div class="console-input-row">
+          <input type="text" id="cmdInput" placeholder="Type a server command and press Enter (sent to the console)">
+          <button class="btn btn-primary btn-sm" id="cmdSend">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-files">
+      <div class="section-head">
+        <div><h2>File Manager</h2><p>Browse the server's file system</p></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-sm" id="newFolderBtn">+ Folder</button>
+          <button class="btn btn-sm btn-primary" id="uploadBtn">↑ Upload</button>
+        </div>
+      </div>
+      <div class="breadcrumb" id="breadcrumb"></div>
+      <div class="card" style="padding:0;">
+        <table class="file-table">
+          <thead><tr><th style="width:55%">Name</th><th>Size</th><th>Modified</th><th></th></tr></thead>
+          <tbody id="fileBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-backups">
+      <div class="section-head">
+        <div><h2>Backups</h2><p>Full world & plugin-data snapshots (tar.gz)</p></div>
+        <button class="btn btn-primary btn-sm" id="createBackupBtn">+ Create Backup</button>
+      </div>
+      <div class="list" id="backupList"><div class="empty-state">No backups yet.</div></div>
+    </div>
+
+    <div class="panel" id="tab-schedules">
+      <div class="section-head">
+        <div><h2>Schedules</h2><p>Automated tasks that run on a cron timer</p></div>
+        <button class="btn btn-primary btn-sm" id="addScheduleBtn">+ New Schedule</button>
+      </div>
+      <div class="list" id="scheduleList"><div class="empty-state">No schedules configured.</div></div>
+    </div>
+
+    <div class="panel" id="tab-tasks">
+      <div class="section-head"><div><h2>Quick Tasks</h2><p>One-click actions for common jobs</p></div></div>
+      <div class="task-grid" id="taskGrid"></div>
+      <div class="card" style="margin-top:16px;">
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:8px;">Broadcast a message</div>
+        <div class="broadcast-row">
+          <input type="text" id="broadcastInput" placeholder="Message to send to all players...">
+          <button class="btn btn-primary btn-sm" id="broadcastBtn">Send to all</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-config">
+      <div class="section-head"><div><h2 id="configTabTitle">MC Configuration</h2><p id="configTabSub">server.properties — restart or /reload required for some values</p></div></div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-head" style="margin-bottom:12px;">
+          <div><h2 style="font-size:13.5px;">Panel Branding</h2><p style="margin-top:2px;">Shown in the sidebar, login screen, and browser tab</p></div>
+        </div>
+        <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;">
+          <div class="field" style="flex:1;min-width:220px;">
+            <label>Server name</label>
+            <input type="text" id="cfgServerName" placeholder="e.g. Vexium" maxlength="64">
+          </div>
+          <button class="btn btn-primary" id="saveBrandingBtn">Save name</button>
+        </div>
+        <div class="note" style="margin-top:14px;">
+          <b>Logo:</b> automatically pulled from <code>server-icon.png</code> in your server directory (the
+          same 64×64 icon shown in the Minecraft multiplayer list). Upload or replace it from the
+          <a href="#" data-jump="files" style="color:var(--ember);">File Manager</a> — no separate setting needed.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-head" style="margin-bottom:12px;">
+          <div><h2 id="configFileTitle" style="font-size:13.5px;">server.properties</h2><p id="configFileNote" style="margin-top:2px;">Every key in the file — nothing curated or hidden</p></div>
+        </div>
+        <input type="text" id="configSearch" placeholder="Search settings..." style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:12.8px;outline:none;margin-bottom:14px;">
+        <div id="configList" style="display:flex;flex-direction:column;gap:0;"></div>
+        <div class="note" id="configAdvancedNote" style="display:none;"></div>
+        <div class="config-foot">
+          <button class="btn btn-ghost" id="revertConfigBtn">Revert</button>
+          <button class="btn btn-primary" id="saveConfigBtn">Save changes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-plugins-installed">
+      <div class="section-head">
+        <div><h2>Installed Plugins</h2><p id="installedCount">— plugins installed</p></div>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="installedSearch" placeholder="Search installed..." style="background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:12.5px;width:190px;outline:none;">
+          <button class="btn btn-sm btn-primary" data-jump="plugins-installer">+ Install New</button>
+        </div>
+      </div>
+      <div class="list" id="installedPluginList"><div class="empty-state">No plugin data loaded.</div></div>
+    </div>
+
+    <div class="panel" id="tab-plugins-installer">
+      <div class="section-head">
+        <div><h2>Plugin Installer</h2><p>Search Hangar (PaperMC) and install directly to plugins/</p></div>
+      </div>
+      <div class="installer-toolbar">
+        <input type="text" id="pluginSearch" placeholder="Search plugins on Hangar...">
+      </div>
+      <div class="plugin-catalog" id="pluginCatalog"><div class="empty-state">Search for a plugin to get started.</div></div>
+    </div>
+
+    <div class="panel" id="tab-players">
+      <div class="section-head">
+        <div><h2>Player Manager</h2><p id="playersSub">Online and previously-seen players</p></div>
+      </div>
+      <div class="player-toolbar" id="playerToolbar">
+        <input type="text" id="playerSearch" placeholder="Search players...">
+      </div>
+      <div class="card" id="playersPaperView" style="padding:0;">
+        <table class="file-table">
+          <thead><tr><th>Player</th><th>Rank</th><th>Status</th><th>Whitelisted</th><th></th></tr></thead>
+          <tbody id="playerBody"></tbody>
+        </table>
+      </div>
+      <div class="card" id="playersVelocityView" style="display:none;">
+        <div class="note" style="margin-bottom:14px;">
+          <b>Velocity doesn't expose per-player management the way Paper does.</b> Ranks, whitelist, and
+          bans live on your backend Paper servers — manage them there (or from this same panel if you
+          point another instance at that server's directory). This is the raw output of <code>glist all</code>.
+        </div>
+        <pre id="playersVelocityRaw" style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border-soft);border-radius:8px;padding:14px;margin:0;">—</pre>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-sftp">
+      <div class="section-head"><div><h2>SFTP Information</h2><p>Connect with FileZilla, WinSCP, or any SFTP client</p></div></div>
+      <div class="sftp-grid">
+        <div class="kv"><span class="k">Host</span><div class="kv-val-row"><span class="v" id="sftpHost">—</span><button class="copy-btn" data-copy-target="sftpHost">⧉</button></div></div>
+        <div class="kv"><span class="k">Port</span><div class="kv-val-row"><span class="v" id="sftpPort">—</span><button class="copy-btn" data-copy-target="sftpPort">⧉</button></div></div>
+        <div class="kv"><span class="k">Username</span><div class="kv-val-row"><span class="v" id="sftpUser">—</span><button class="copy-btn" data-copy-target="sftpUser">⧉</button></div></div>
+        <div class="kv" style="grid-column:1/-1;"><span class="k">Full connection string</span><div class="kv-val-row"><span class="v" id="sftpConn">—</span><button class="copy-btn" data-copy-target="sftpConn">⧉</button></div></div>
+      </div>
+      <div class="note" id="sftpNote"><b>Note:</b> —</div>
+    </div>
+
+    <div class="panel" id="tab-admins">
+      <div class="section-head">
+        <div><h2>Administrator Management</h2><p>Everyone with access to this panel — not to be confused with in-game LuckPerms ranks</p></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">Add administrator</div>
+        <div class="admin-form">
+          <div class="field"><label>Username</label><input type="text" id="newAdminUser" placeholder="Username"></div>
+          <div class="field"><label>Role</label>
+            <select id="newAdminRole"><option value="admin">Admin</option><option value="moderator" selected>Moderator</option></select>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="newAdminPass" placeholder="Set a password or generate one">
+              <button class="btn btn-sm btn-ghost" id="regenAdminPassBtn" title="Generate a random password" style="flex-shrink:0;">⟳</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="addAdminBtn">+ Add</button>
+        </div>
+      </div>
+      <div class="list" id="adminList"><div class="empty-state">No administrator data loaded.</div></div>
+    </div>
+
+  </div>
+
+  <div class="resfoot">
+    <div class="res-card">
+      <div class="res-top">
+        <span class="res-label"><span class="res-dot" style="background:var(--ember)"></span>CPU Usage</span>
+        <div class="res-right"><div class="res-now" id="cpuText">—%</div><div class="res-sub" id="cpuSub">—</div></div>
+      </div>
+      <canvas class="res-graph" id="cpuGraph"></canvas>
+    </div>
+    <div class="res-card">
+      <div class="res-top">
+        <span class="res-label"><span class="res-dot" style="background:var(--blue)"></span>Memory Usage</span>
+        <div class="res-right"><div class="res-now" id="memText">—</div><div class="res-sub" id="memSub">—</div></div>
+      </div>
+      <canvas class="res-graph" id="memGraph"></canvas>
+    </div>
+    <div class="res-card">
+      <div class="res-top">
+        <span class="res-label"><span class="res-dot" style="background:var(--green)"></span>Disc Usage</span>
+        <div class="res-right"><div class="res-now" id="diskText">—</div><div class="res-sub" id="diskSub">—</div></div>
+      </div>
+      <canvas class="res-graph" id="diskGraph"></canvas>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+/* ==========================================================================
+   VEXIUM PANEL — frontend
+   Talks to the Node/Express backend in src/. Auth is a yaml-backed session
+   cookie. Power controls spawn/kill the java process directly. Console
+   commands go straight to its stdin. Everything below is wired to real endpoints —
+   there are no simulated/seeded data paths left.
+   ========================================================================== */
+
+const API_BASE = '';
+async function api(path, opts={}){
+  const res = await fetch(API_BASE + path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+  });
+  let body = null;
+  try { body = await res.json(); } catch(e) {}
+  if(!res.ok){
+    const err = new Error((body && body.error) || ('Request failed: '+res.status));
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
+/* ---------- BRANDING (public — needed on the login screen too) ---------- */
+let currentServerName = 'Server';
+function applyBrandMarks(hasIcon){
+  document.querySelectorAll('.brand-mark').forEach(el=>{
+    if(hasIcon){
+      el.innerHTML = `<img src="/api/server-icon?_=${Date.now()}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:7px;">`;
+    } else {
+      el.innerHTML = '';
+      el.textContent = (currentServerName||'S').trim().charAt(0).toUpperCase() || 'S';
+    }
+  });
+}
+function applyFavicon(hasIcon){
+  const link = document.getElementById('faviconLink');
+  if(link) link.href = hasIcon ? '/api/server-icon?_='+Date.now() : 'data:,';
+}
+async function applyBranding(){
+  try{
+    const b = await api('/api/branding');
+    currentServerName = b.serverName || 'Server';
+    document.title = currentServerName + ' — Server Control';
+    document.querySelectorAll('.brand-name').forEach(el=> el.textContent = currentServerName);
+    applyBrandMarks(b.hasIcon);
+    applyFavicon(b.hasIcon);
+    const nameInput = document.getElementById('cfgServerName');
+    if(nameInput && document.activeElement !== nameInput) nameInput.value = currentServerName;
+  } catch(err){ /* keep defaults if this fails — never block the login screen on it */ }
+}
+applyBranding();
+
+/* ---------- AUTH GATE ---------- */
+const loginScreen = document.getElementById('loginScreen');
+const appShell = document.getElementById('appShell');
+const loginError = document.getElementById('loginError');
+const loginCard = document.querySelector('.login-card');
+const loginUserInput = document.getElementById('loginUser');
+const loginPassInput = document.getElementById('loginPass');
+let currentRole = null;
+let serverType = 'paper';
+
+function applySession(user, role, type){
+  currentRole = role;
+  serverType = type === 'velocity' ? 'velocity' : 'paper';
+  document.getElementById('sessionUser').textContent = user;
+  document.getElementById('sessionRole').textContent = role;
+  document.getElementById('sessionAvatar').textContent = user.slice(0,2).toUpperCase();
+  const dashName = document.getElementById('dashUserName');
+  if(dashName) dashName.textContent = user;
+  document.querySelector('[data-tab="admins"]').style.display = (role==='owner'||role==='admin') ? '' : 'none';
+  document.getElementById('navConfigLabel').textContent = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
+  titles.config = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
+}
+
+async function attemptLogin(){
+  const user = loginUserInput.value.trim();
+  const pass = loginPassInput.value;
+  if(!user || !pass) return;
+  const btn = document.getElementById('loginSubmit');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try{
+    const result = await api('/api/login', { method:'POST', body: JSON.stringify({ username:user, password:pass }) });
+    loginError.classList.remove('show');
+    loginScreen.style.display = 'none';
+    appShell.style.display = 'flex';
+    applySession(result.user, result.role, result.serverType);
+    toast('Welcome back, '+result.user);
+    initLiveConnection();
+    loadAllTabs();
+  } catch(err){
+    loginError.textContent = err.message || 'Incorrect username or password.';
+    loginError.classList.add('show');
+    loginPassInput.value = '';
+    loginPassInput.focus();
+    loginCard.classList.remove('shake');
+    void loginCard.offsetWidth;
+    loginCard.classList.add('shake');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+}
+document.getElementById('loginSubmit').addEventListener('click', attemptLogin);
+[loginUserInput, loginPassInput].forEach(inp=>{
+  inp.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); attemptLogin(); } });
+});
+document.getElementById('logoutBtn').addEventListener('click', async function(){
+  try{ await api('/api/logout', { method:'POST' }); } catch(e){}
+  if(liveSocket) { liveSocket.close(); liveSocket = null; }
+  appShell.style.display = 'none';
+  loginScreen.style.display = 'flex';
+  loginUserInput.value = '';
+  loginPassInput.value = '';
+  loginError.classList.remove('show');
+});
+
+(async function checkExistingSession(){
+  try{
+    const s = await api('/api/session');
+    loginScreen.style.display = 'none';
+    appShell.style.display = 'flex';
+    applySession(s.user, s.role, s.serverType);
+    initLiveConnection();
+    loadAllTabs();
+  } catch(e){}
+})();
+
+/* ---------- NAV ---------- */
+const titles = {dashboard:'Dashboard',console:'Console',files:'File Manager',backups:'Backups',schedules:'Schedules',tasks:'Quick Tasks',config:'MC Configuration','plugins-installed':'Installed Plugins','plugins-installer':'Plugin Installer',players:'Player Manager',sftp:'SFTP Information',admins:'Administrator Management'};
+const tabLoaders = {
+  dashboard: renderActivity, files: renderFiles, backups: renderBackups, schedules: renderSchedules,
+  config: loadConfig, 'plugins-installed': renderInstalledPlugins,
+  players: renderPlayers, sftp: renderSftp, admins: renderAdmins, tasks: renderTaskGrid,
+};
+function switchTab(tab){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active', i.dataset.tab===tab));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const target = document.getElementById('tab-'+tab);
+  if(target) target.classList.add('active');
+  document.getElementById('pageTitle').textContent = titles[tab] || tab;
+  document.getElementById('content').scrollTop = 0;
+  if(tabLoaders[tab]) tabLoaders[tab]();
+}
+document.querySelectorAll('.nav-item').forEach(item=>{
+  item.addEventListener('click',()=>switchTab(item.dataset.tab));
+});
+document.querySelectorAll('[data-jump]').forEach(btn=>{
+  btn.addEventListener('click',(e)=>{ e.preventDefault(); switchTab(btn.dataset.jump); });
+});
+function loadAllTabs(){ renderFiles(); renderActivity(); }
+
+function toast(msg){
+  const wrap = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className='toast'; t.textContent=msg;
+  wrap.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2600);
+}
+
+/* ---------- ACTIVITY FEED ---------- */
+const ACTIVITY_ICONS = {
+  auth: 'M12 3l7 3v6c0 4.5-3 8.2-7 9-4-.8-7-4.5-7-9V6z',
+  power: 'M6 4l14 8-14 8V4z',
+  backup: 'M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6',
+  schedule: 'M12 7v5l3 3',
+  player: 'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V7z',
+  admin: 'M9.5 12l1.8 1.8L15 10',
+  config: 'M12 9a3 3 0 100 6 3 3 0 000-6z',
+  plugin: 'M12 2a3 3 0 00-3 3v2H6a1 1 0 00-1 1v3H3a3 3 0 000 6h2v3a1 1 0 001 1h3v-2a3 3 0 016 0v2h3a1 1 0 001-1v-3h2a3 3 0 000-6h-2V8a1 1 0 00-1-1h-3V5a3 3 0 00-3-3z',
+};
+function relativeTime(iso){
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const s = Math.max(0, Math.floor(diffMs/1000));
+  if(s < 60) return 'just now';
+  const m = Math.floor(s/60);
+  if(m < 60) return m+'m ago';
+  const h = Math.floor(m/60);
+  if(h < 24) return h+'h ago';
+  const d = Math.floor(h/24);
+  return d+'d ago';
+}
+function activityRowHtml(entry){
+  const icon = ACTIVITY_ICONS[entry.type] || ACTIVITY_ICONS.config;
+  return `<div class="feed-item" data-time="${entry.time}">
+    <span class="feed-dot"></span>
+    <span class="feed-text">${escapeHtml(entry.message)}</span>
+    <span class="feed-time">${relativeTime(entry.time)}</span>
+  </div>`;
+}
+async function renderActivity(){
+  const feed = document.getElementById('dashFeed');
+  try{
+    const entries = await api('/api/activity?limit=30');
+    if(entries.length===0){ feed.innerHTML = `<div class="empty-state">No activity yet.</div>`; return; }
+    feed.innerHTML = entries.map(activityRowHtml).join('');
+  } catch(err){ feed.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+function prependActivity(entry){
+  const feed = document.getElementById('dashFeed');
+  if(!feed) return;
+  if(feed.querySelector('.empty-state')) feed.innerHTML = '';
+  feed.insertAdjacentHTML('afterbegin', activityRowHtml(entry));
+  while(feed.children.length > 30) feed.removeChild(feed.lastChild);
+}
+// Keep "Xm ago" labels fresh without re-fetching.
+setInterval(()=>{
+  document.querySelectorAll('#dashFeed .feed-item').forEach(row=>{
+    const timeEl = row.querySelector('.feed-time');
+    if(timeEl) timeEl.textContent = relativeTime(row.dataset.time);
+  });
+}, 30000);
+
+/* ---------- POWER STATE ---------- */
+let serverState = 'offline';
+const pill = document.getElementById('statusPill');
+const pillText = document.getElementById('statusText');
+const btnStart = document.getElementById('btnStart');
+const btnRestart = document.getElementById('btnRestart');
+const btnStop = document.getElementById('btnStop');
+const btnKill = document.getElementById('btnKill');
+
+function applyState(state){
+  serverState = state;
+  pill.className = 'status-pill';
+  const labels = {online:'ONLINE',offline:'OFFLINE',starting:'STARTING',stopping:'STOPPING',restarting:'RESTARTING'};
+  pillText.textContent = labels[state] || state.toUpperCase();
+  if(state==='offline') pill.classList.add('st-offline');
+  else if(state!=='online') pill.classList.add('st-transit');
+
+  btnStart.disabled   = state!=='offline';
+  btnRestart.disabled = state!=='online';
+  btnStop.disabled    = state!=='online';
+  btnKill.disabled    = state==='offline';
+
+  const dashTpsBadge = document.getElementById('dashTpsBadge');
+  if(dashTpsBadge){ dashTpsBadge.textContent = labels[state]||state; dashTpsBadge.className = 'badge '+(state==='online'?'on':'off'); }
+  if(state!=='online'){
+    const dashTps = document.getElementById('dashTps');
+    if(dashTps) dashTps.textContent = '—';
+    const dashMspt = document.getElementById('dashMspt');
+    if(dashMspt) dashMspt.textContent = 'MSPT: —';
+    document.getElementById('tpsVal').textContent = '—';
+    document.getElementById('msptVal').textContent = '—';
+  }
+}
+applyState('offline');
+
+async function doStart(){ if(serverState!=='offline') return; try{ await api('/api/power/start', {method:'POST'}); toast('Server starting...'); } catch(err){ toast('Start failed: '+err.message); } }
+async function doRestart(){ if(serverState!=='online') return; try{ await api('/api/power/restart', {method:'POST'}); toast('Restarting server...'); } catch(err){ toast('Restart failed: '+err.message); } }
+async function doStop(){ if(serverState!=='online') return; try{ await api('/api/power/stop', {method:'POST'}); toast('Stopping server...'); } catch(err){ toast('Stop failed: '+err.message); } }
+async function doKill(){
+  if(serverState==='offline') return;
+  if(!confirm('Force kill the server process? Unsaved world changes since the last autosave will be lost.')) return;
+  try{ await api('/api/power/kill', {method:'POST'}); toast('Process killed'); } catch(err){ toast('Kill failed: '+err.message); }
+}
+btnStart.addEventListener('click', doStart);
+btnRestart.addEventListener('click', doRestart);
+btnStop.addEventListener('click', doStop);
+btnKill.addEventListener('click', doKill);
+
+/* ---------- RESOURCE METERS ---------- */
+let cpu=0, mem=0, memMax=0, disk=0, diskMax=0;
+const HISTORY_LEN = 40;
+const cpuHist = new Array(HISTORY_LEN).fill(0);
+const memHist = new Array(HISTORY_LEN).fill(0);
+const diskHist = new Array(HISTORY_LEN).fill(0);
+
+function setupCanvas(canvas){
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const w = rect.width || canvas.parentElement.clientWidth;
+  const h = 46;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w+'px';
+  canvas.style.height = h+'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx, w, h};
+}
+function drawGraph(canvas, data, maxVal, colorHex){
+  const {ctx, w, h} = setupCanvas(canvas);
+  ctx.clearRect(0,0,w,h);
+  if(!maxVal){ return; }
+  const pad = 3;
+  const usableH = h - pad*2;
+  const stepX = w / (data.length - 1);
+  const pts = data.map((v,i)=>({ x: i*stepX, y: pad + usableH - (Math.max(0,Math.min(maxVal,v))/maxVal)*usableH }));
+  function tracePath(){
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for(let i=1;i<pts.length-1;i++){
+      const mx = (pts[i].x+pts[i+1].x)/2, my = (pts[i].y+pts[i+1].y)/2;
+      ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+    }
+    ctx.quadraticCurveTo(pts[pts.length-1].x, pts[pts.length-1].y, pts[pts.length-1].x, pts[pts.length-1].y);
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.045)'; ctx.lineWidth = 1;
+  for(let g=1;g<3;g++){ const gy = pad + (usableH/3)*g; ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(w,gy); ctx.stroke(); }
+  tracePath();
+  ctx.lineTo(pts[pts.length-1].x, h); ctx.lineTo(pts[0].x, h); ctx.closePath();
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, colorHex+'55'); grad.addColorStop(1, colorHex+'02');
+  ctx.fillStyle = grad; ctx.fill();
+  tracePath();
+  ctx.strokeStyle = colorHex; ctx.lineWidth = 1.75; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke();
+  const last = pts[pts.length-1];
+  ctx.beginPath(); ctx.arc(last.x, last.y, 2.6, 0, Math.PI*2); ctx.fillStyle = colorHex; ctx.fill();
+}
+function colorFor(pct, baseHex){ if(pct>85) return '#E5595E'; if(pct>65) return '#E3B341'; return baseHex; }
+function renderRes(){
+  try{
+    document.getElementById('cpuText').textContent = memMax ? cpu.toFixed(0)+'%' : '—%';
+    drawGraph(document.getElementById('cpuGraph'), cpuHist, 100, colorFor(cpu, '#FF8A3D'));
+    const memPct = memMax ? (mem/memMax)*100 : 0;
+    document.getElementById('memText').textContent = memMax ? mem.toFixed(1)+' GB' : '—';
+    document.getElementById('memSub').textContent = memMax ? ('of '+memMax.toFixed(0)+' GB') : '—';
+    drawGraph(document.getElementById('memGraph'), memHist, memMax, colorFor(memPct, '#5B9DD9'));
+    const diskPct = diskMax ? (disk/diskMax)*100 : 0;
+    document.getElementById('diskText').textContent = diskMax ? disk.toFixed(1)+' GB' : '—';
+    document.getElementById('diskSub').textContent = diskMax ? ('of '+diskMax.toFixed(0)+' GB') : '—';
+    drawGraph(document.getElementById('diskGraph'), diskHist, diskMax, colorFor(diskPct, '#5FBF9F'));
+  } catch(err){}
+}
+renderRes();
+window.addEventListener('resize', renderRes);
+
+function tpsColor(tps){ if(tps>=18) return 'var(--green)'; if(tps>=15) return 'var(--yellow)'; return 'var(--red)'; }
+function renderBridgeStats(bridge){
+  const tpsVal = document.getElementById('tpsVal');
+  const msptVal = document.getElementById('msptVal');
+  const playersVal = document.getElementById('playersVal');
+  const dashTps = document.getElementById('dashTps');
+  const dashMspt = document.getElementById('dashMspt');
+  const dashPlayers = document.getElementById('dashPlayers');
+
+  if(!bridge || !bridge.available){
+    const label = (bridge && bridge.stale) ? 'Stale' : 'Not installed';
+    if(tpsVal) tpsVal.textContent = '—';
+    if(msptVal) msptVal.textContent = '—';
+    if(dashTps){ dashTps.textContent = label; dashTps.style.color = ''; }
+    if(dashMspt) dashMspt.textContent = (bridge && bridge.stale)
+      ? 'Bridge plugin stopped reporting'
+      : 'Install the Vexium Bridge plugin to see this';
+    return;
+  }
+
+  const tps = bridge.tps, mspt = bridge.mspt;
+  if(tpsVal) tpsVal.textContent = tps.toFixed(1);
+  if(msptVal) msptVal.textContent = mspt.toFixed(1);
+  if(dashTps){ dashTps.textContent = tps.toFixed(1); dashTps.style.color = tpsColor(tps); }
+  if(dashMspt) dashMspt.textContent = 'MSPT: '+mspt.toFixed(1)+' ms';
+  if(bridge.playersOnline !== undefined){
+    if(playersVal) playersVal.textContent = bridge.playersOnline;
+    if(dashPlayers) dashPlayers.textContent = bridge.playersMax !== undefined ? `${bridge.playersOnline} / ${bridge.playersMax}` : bridge.playersOnline;
+  }
+}
+
+function applyStats(stats, uptimeMs){
+  cpu = stats.cpuPct || 0;
+  mem = stats.memMB ? stats.memMB/1024 : 0;
+  memMax = stats.memMaxMB ? stats.memMaxMB/1024 : memMax;
+  disk = stats.disk ? stats.disk.usedGB : disk;
+  diskMax = stats.disk ? stats.disk.sizeGB : diskMax;
+  cpuHist.shift(); cpuHist.push(cpu);
+  memHist.shift(); memHist.push(mem);
+  diskHist.shift(); diskHist.push(disk);
+  renderRes();
+
+  // TPS/MSPT come from the optional Vexium Bridge plugin's stats file — see
+  // plugin/README.md. No console commands are sent for this.
+  renderBridgeStats(serverState==='online' ? stats.bridge : null);
+
+  const h = Math.floor(uptimeMs/3600000), d = Math.floor(h/24);
+  const uptimeStr = serverState==='online' ? (d>0 ? `${d}d ${h%24}h` : `${h}h ${Math.floor((uptimeMs%3600000)/60000)}m`) : '—';
+  document.getElementById('uptimeVal').textContent = uptimeStr;
+  const dashUptime = document.getElementById('dashUptime');
+  if(dashUptime) dashUptime.textContent = uptimeStr;
+}
+
+/* ---------- CONSOLE ---------- */
+const logEl = document.getElementById('consoleLog');
+let autoscroll = true;
+let lineNum = 0;
+function timeStr(iso){ const d = iso ? new Date(iso) : new Date(); return d.toTimeString().slice(0,8); }
+function renderLogEntry(entry){
+  lineNum++;
+  const row = document.createElement('div');
+  row.className='log-line';
+  const lvl = entry.level || 'INFO';
+  row.innerHTML = `<span class="log-time">${timeStr(entry.time)}</span><span class="log-${lvl}">[${lvl}]</span> ${consoleTextToHtml(entry.text)}`;
+  logEl.appendChild(row);
+  document.getElementById('lineCount').textContent = lineNum+' lines';
+  if(autoscroll) logEl.scrollTop = logEl.scrollHeight;
+}
+function escapeHtml(s){ const div = document.createElement('div'); div.textContent = s; return div.innerHTML; }
+
+/* ---------- CONSOLE COLOR FORMATTING ---------- */
+// Handles both real ANSI escape codes (what Paper/Velocity write to stdout
+// via their TerminalConsoleAppender) and raw Minecraft §-formatting codes
+// (occasionally printed as-is by plugins that bypass that appender).
+const MC_COLOR_HEX = {
+  '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA',
+  '8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'
+};
+const ANSI_COLOR_HEX = {
+  30:'#3b3b3b', 31:'#c0392b', 32:'#27ae60', 33:'#c9a227', 34:'#2980b9', 35:'#8e44ad', 36:'#16a085', 37:'#bdbdbd',
+  90:'#6b6b6b', 91:'#ff5c5c', 92:'#5fbf9f', 93:'#e3b341', 94:'#5b9dd9', 95:'#c77dff', 96:'#4fd1d9', 97:'#ffffff'
+};
+const CONSOLE_TOKEN_RE = /\x1b\[([0-9;]*)m|\u00a7([0-9a-fk-orA-FK-OR])/g;
+
+function consoleTextToHtml(raw){
+  let out = '';
+  let lastIndex = 0;
+  let color = null, bold = false, underline = false, italic = false, strike = false;
+  let spanOpen = false;
+
+  function closeSpan(){ if(spanOpen){ out += '</span>'; spanOpen = false; } }
+  function flush(chunk){
+    if(!chunk) return;
+    closeSpan();
+    if(color || bold || underline || italic || strike){
+      const styles = [];
+      if(color) styles.push('color:'+color);
+      if(bold) styles.push('font-weight:700');
+      if(underline) styles.push('text-decoration:underline');
+      if(italic) styles.push('font-style:italic');
+      if(strike) styles.push('text-decoration:line-through');
+      out += `<span style="${styles.join(';')}">`;
+      spanOpen = true;
+    }
+    out += escapeHtml(chunk);
+  }
+  function applyAnsiCode(code){
+    if(code===0){ color=null; bold=false; underline=false; italic=false; strike=false; }
+    else if(code===1) bold=true;
+    else if(code===3) italic=true;
+    else if(code===4) underline=true;
+    else if(code===9) strike=true;
+    else if(code===39) color=null;
+    else if(ANSI_COLOR_HEX[code]) color=ANSI_COLOR_HEX[code];
+  }
+  function applyMcCode(ch){
+    const c = ch.toLowerCase();
+    if(c==='r'){ color=null; bold=false; underline=false; italic=false; strike=false; }
+    else if(c==='l') bold=true;
+    else if(c==='n') underline=true;
+    else if(c==='o') italic=true;
+    else if(c==='m') strike=true;
+    else if(c==='k'){ /* obfuscated — no sane static rendering, ignore */ }
+    else if(MC_COLOR_HEX[c]) color=MC_COLOR_HEX[c];
+  }
+
+  let m;
+  while((m = CONSOLE_TOKEN_RE.exec(raw))){
+    flush(raw.slice(lastIndex, m.index));
+    if(m[1] !== undefined){
+      const codes = m[1].split(';').filter(Boolean).map(Number);
+      (codes.length ? codes : [0]).forEach(applyAnsiCode);
+    } else {
+      applyMcCode(m[2]);
+    }
+    lastIndex = CONSOLE_TOKEN_RE.lastIndex;
+  }
+  flush(raw.slice(lastIndex));
+  closeSpan();
+  return out;
+}
+
+document.getElementById('autoscrollBtn').addEventListener('click',function(){
+  autoscroll = !autoscroll;
+  this.textContent = '⏷ Autoscroll: '+(autoscroll?'On':'Off');
+});
+document.getElementById('clearConsoleBtn').addEventListener('click',()=>{logEl.innerHTML='';lineNum=0;document.getElementById('lineCount').textContent='0 lines';});
+async function sendCmd(){
+  const inp = document.getElementById('cmdInput');
+  const val = inp.value.trim();
+  if(!val) return;
+  inp.value='';
+  try{ await api('/api/command', { method:'POST', body: JSON.stringify({ command: val }) }); }
+  catch(err){ toast('Command failed: '+err.message); }
+}
+document.getElementById('cmdSend').addEventListener('click',sendCmd);
+document.getElementById('cmdInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendCmd();});
+
+/* ---------- LIVE CONNECTION ---------- */
+let liveSocket = null;
+function initLiveConnection(){
+  if(liveSocket) return;
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  liveSocket = new WebSocket(`${proto}//${location.host}/ws`);
+  liveSocket.addEventListener('message', (ev)=>{
+    let msg;
+    try{ msg = JSON.parse(ev.data); } catch(e){ return; }
+    if(msg.type === 'history'){ logEl.innerHTML=''; lineNum=0; msg.entries.forEach(renderLogEntry); }
+    else if(msg.type === 'log'){ renderLogEntry(msg.entry); }
+    else if(msg.type === 'state'){ applyState(msg.state); }
+    else if(msg.type === 'stats'){ applyState(msg.state); applyStats(msg.stats, msg.uptimeMs); }
+    else if(msg.type === 'activity'){ prependActivity(msg.entry); }
+    else if(msg.type === 'activity-history'){ /* dashboard tab does its own initial fetch via renderActivity() */ }
+  });
+  liveSocket.addEventListener('close', ()=>{
+    liveSocket = null;
+    if(appShell.style.display !== 'none') setTimeout(initLiveConnection, 2000);
+  });
+  liveSocket.addEventListener('error', ()=>{});
+  api('/api/status').then(s=>applyState(s.state)).catch(()=>{});
+  api('/api/stats').then(s=>applyStats(s, 0)).catch(()=>{});
+}
+
+/* ---------- FILES ---------- */
+let curPath = '';
+const folderIcon = `<svg class="file-icon folder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6a1 1 0 011-1h5l2 2h9a1 1 0 011 1v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg>`;
+const fileIcon = `<svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M15 2v5h5"/></svg>`;
+function fmtBytes(n){
+  if(n===null || n===undefined) return '—';
+  if(n < 1024) return n+' B';
+  if(n < 1024*1024) return (n/1024).toFixed(1)+' KB';
+  return (n/1024/1024).toFixed(1)+' MB';
+}
+function fmtDate(iso){
+  if(!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'})+' '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+}
+async function renderFiles(){
+  const body = document.getElementById('fileBody');
+  body.innerHTML = `<tr><td colspan="4" style="color:var(--text-faint);padding:22px 10px;text-align:center;">Loading...</td></tr>`;
+  let items;
+  try{ items = await api('/api/files?path='+encodeURIComponent(curPath)); }
+  catch(err){ body.innerHTML = `<tr><td colspan="4" style="color:var(--red);padding:22px 10px;text-align:center;">${err.message}</td></tr>`; return; }
+  body.innerHTML = '';
+  items.forEach(it=>{
+    const tr = document.createElement('tr');
+    tr.className='file-row';
+    tr.innerHTML = `<td><div class="file-name">${it.type==='dir'?folderIcon:fileIcon}${it.name}</div></td>
+      <td class="file-meta">${it.type==='dir'?'—':fmtBytes(it.size)}</td>
+      <td class="file-meta">${fmtDate(it.mtime)}</td>
+      <td style="text-align:right;">
+        ${it.type==='dir' ? '<button class="btn btn-sm btn-ghost" data-act="open">Open</button>' : '<button class="btn btn-sm btn-ghost" data-act="edit">Edit</button><button class="btn btn-sm btn-ghost" data-act="del">Delete</button>'}
+      </td>`;
+    const next = curPath ? curPath+'/'+it.name : it.name;
+    tr.addEventListener('click',(e)=>{
+      const act = e.target.dataset.act;
+      if(it.type==='dir' && (!act || act==='open')){ curPath = next; renderFiles(); renderCrumb(); }
+      else if(act==='edit'){ openFileEditor(next); }
+      else if(act==='del'){ deleteFile(next); }
+    });
+    body.appendChild(tr);
+  });
+  if(items.length===0){ body.innerHTML = `<tr><td colspan="4" style="color:var(--text-faint);padding:22px 10px;text-align:center;">This folder is empty.</td></tr>`; }
+}
+function renderCrumb(){
+  const parts = curPath.split('/').filter(Boolean);
+  const el = document.getElementById('breadcrumb');
+  el.innerHTML='';
+  const root = document.createElement('span');
+  root.className='seg'; root.textContent='/ vexium';
+  root.addEventListener('click',()=>{curPath='';renderFiles();renderCrumb();});
+  el.appendChild(root);
+  let acc = '';
+  parts.forEach(p=>{
+    acc += (acc?'/':'')+p;
+    const sep = document.createElement('span'); sep.className='sep'; sep.textContent='›'; el.appendChild(sep);
+    const seg = document.createElement('span'); seg.className='seg'; seg.textContent=p;
+    const thisPath = acc;
+    seg.addEventListener('click',()=>{curPath=thisPath;renderFiles();renderCrumb();});
+    el.appendChild(seg);
+  });
+}
+async function deleteFile(relPath){
+  if(!confirm('Delete '+relPath+'? This cannot be undone.')) return;
+  try{ await api('/api/files', { method:'DELETE', body: JSON.stringify({ path: relPath }) }); renderFiles(); toast('Deleted'); }
+  catch(err){ toast('Delete failed: '+err.message); }
+}
+async function openFileEditor(relPath){
+  let content;
+  try{ content = (await api('/api/files/content?path='+encodeURIComponent(relPath))).content; }
+  catch(err){ toast('Could not open file: '+err.message); return; }
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div style="width:min(760px,90vw);height:min(600px,80vh);background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--mono);font-size:12.5px;">${relPath}</span>
+        <button class="btn btn-sm btn-ghost" id="editorClose">✕</button>
+      </div>
+      <textarea id="editorArea" style="flex:1;background:#08090B;color:var(--text);border:none;outline:none;padding:14px;font-family:var(--mono);font-size:12.5px;resize:none;">${content.replace(/</g,'&lt;')}</textarea>
+      <div style="padding:12px 16px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:8px;">
+        <button class="btn btn-ghost" id="editorCancel">Cancel</button>
+        <button class="btn btn-primary" id="editorSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = ()=>overlay.remove();
+  overlay.querySelector('#editorClose').addEventListener('click', close);
+  overlay.querySelector('#editorCancel').addEventListener('click', close);
+  overlay.querySelector('#editorSave').addEventListener('click', async ()=>{
+    const newContent = overlay.querySelector('#editorArea').value;
+    try{ await api('/api/files/content', { method:'PUT', body: JSON.stringify({ path: relPath, content: newContent }) }); toast('Saved '+relPath); close(); }
+    catch(err){ toast('Save failed: '+err.message); }
+  });
+}
+document.getElementById('newFolderBtn').addEventListener('click', async ()=>{
+  const name = prompt('New folder name:');
+  if(!name) return;
+  try{ await api('/api/files/mkdir', { method:'POST', body: JSON.stringify({ path: (curPath?curPath+'/':'')+name }) }); renderFiles(); toast('Folder created'); }
+  catch(err){ toast('Failed: '+err.message); }
+});
+document.getElementById('uploadBtn').addEventListener('click', ()=>{
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.addEventListener('change', async ()=>{
+    const file = input.files[0];
+    if(!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', curPath);
+    try{
+      const res = await fetch('/api/files/upload', { method:'POST', body: formData, credentials:'include' });
+      if(!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+      renderFiles(); toast('Uploaded '+file.name);
+    } catch(err){ toast('Upload failed: '+err.message); }
+  });
+  input.click();
+});
+
+/* ---------- BACKUPS ---------- */
+async function renderBackups(){
+  const list = document.getElementById('backupList');
+  list.innerHTML = `<div class="empty-state">Loading...</div>`;
+  try{
+    const items = await api('/api/backups');
+    if(items.length===0){ list.innerHTML = `<div class="empty-state">No backups yet.</div>`; return; }
+    list.innerHTML = '';
+    items.forEach(b=>{
+      const row = document.createElement('div');
+      row.className = 'row-card';
+      row.innerHTML = `
+        <div class="row-left">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></div>
+          <div><div class="row-title">${b.name}</div><div class="row-sub">${fmtBytes(b.sizeBytes)} · ${fmtDate(b.createdAt)}</div></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-sm" data-act="restore">Restore</button>
+          <button class="btn btn-sm btn-danger" data-act="delete">Delete</button>
+        </div>`;
+      row.querySelector('[data-act="restore"]').addEventListener('click', async ()=>{
+        if(!confirm('Restore '+b.name+'? The server must be offline, and this overwrites current world/plugin data.')) return;
+        try{ await api('/api/backups/'+encodeURIComponent(b.name)+'/restore', {method:'POST'}); toast('Restored '+b.name); }
+        catch(err){ toast('Restore failed: '+err.message); }
+      });
+      row.querySelector('[data-act="delete"]').addEventListener('click', async ()=>{
+        if(!confirm('Delete backup '+b.name+'?')) return;
+        try{ await api('/api/backups/'+encodeURIComponent(b.name), {method:'DELETE'}); renderBackups(); toast('Deleted'); }
+        catch(err){ toast('Delete failed: '+err.message); }
+      });
+      list.appendChild(row);
+    });
+  } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+document.getElementById('createBackupBtn').addEventListener('click', async ()=>{
+  const label = prompt('Label for this backup (optional):','manual') || 'manual';
+  try{ await api('/api/backups', {method:'POST', body: JSON.stringify({label})}); toast('Backup created'); renderBackups(); }
+  catch(err){ toast('Backup failed: '+err.message); }
+});
+
+/* ---------- SCHEDULES ---------- */
+async function renderSchedules(){
+  const list = document.getElementById('scheduleList');
+  list.innerHTML = `<div class="empty-state">Loading...</div>`;
+  try{
+    const { schedules } = await api('/api/schedules');
+    if(schedules.length===0){ list.innerHTML = `<div class="empty-state">No schedules configured.</div>`; return; }
+    list.innerHTML = '';
+    schedules.forEach(s=>{
+      const row = document.createElement('div');
+      row.className = 'row-card';
+      row.innerHTML = `
+        <div class="row-left">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></div>
+          <div><div class="row-title">${s.name}</div><div class="row-sub">${s.cron} · ${s.action}</div></div>
+        </div>
+        <div class="row-actions">
+          <div class="toggle ${s.enabled?'on':''}" data-id="${s.id}"></div>
+          <button class="btn btn-sm btn-danger" data-act="delete">Delete</button>
+        </div>`;
+      row.querySelector('.toggle').addEventListener('click', async (e)=>{
+        const on = !e.currentTarget.classList.contains('on');
+        try{ await api('/api/schedules/'+s.id, {method:'PATCH', body: JSON.stringify({enabled:on})}); e.currentTarget.classList.toggle('on', on); }
+        catch(err){ toast('Failed: '+err.message); }
+      });
+      row.querySelector('[data-act="delete"]').addEventListener('click', async ()=>{
+        if(!confirm('Delete schedule "'+s.name+'"?')) return;
+        try{ await api('/api/schedules/'+s.id, {method:'DELETE'}); renderSchedules(); }
+        catch(err){ toast('Failed: '+err.message); }
+      });
+      list.appendChild(row);
+    });
+  } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
+  const name = prompt('Schedule name:', 'Nightly restart'); if(!name) return;
+  const cronExpr = prompt('Cron expression (e.g. "0 4 * * *" for 4am daily):', '0 4 * * *'); if(!cronExpr) return;
+  const action = prompt('Action: restart, stop, save_all, or broadcast', 'restart'); if(!action) return;
+  let message = '';
+  if(action==='broadcast') message = prompt('Broadcast message:', 'Scheduled announcement') || '';
+  try{ await api('/api/schedules', {method:'POST', body: JSON.stringify({name, cron:cronExpr, action, message, enabled:true})}); renderSchedules(); toast('Schedule added'); }
+  catch(err){ toast('Failed: '+err.message); }
+});
+
+/* ---------- QUICK TASKS ---------- */
+const tasks = [
+  {t:'Restart Server',d:'Graceful restart with player warning',icon:'M13 2L4 14h6l-1 8 9-12h-6z',danger:false,action:doRestart},
+  {t:'Stop Server',d:'Shuts the server down completely',icon:'M6 4h4v16H6zM14 4h4v16h-4z',danger:true,action:doStop},
+  {t:'Save All',d:'Force-flush the world to disk',icon:'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM7 3v6h8V3M7 15h6',danger:false,paperOnly:true,action:()=>runCommand('save-all','World save triggered')},
+  {t:'Reload Plugins',d:'Soft-reload without a full restart',icon:'M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-5M20 14a8 8 0 01-14 5',danger:false,paperOnly:true,action:()=>runCommand('reload confirm','Reload issued (Paper discourages this — a restart is safer)')},
+  {t:'Toggle Whitelist',d:'Turn whitelist mode on or off',icon:'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V7z',danger:false,paperOnly:true,action:()=>{ const on = confirm('OK = turn whitelist ON, Cancel = turn it OFF'); runCommand('whitelist '+(on?'on':'off'), 'Whitelist turned '+(on?'on':'off')); }},
+  {t:'Op / Deop Player',d:'Grant or revoke operator status',icon:'M12 2l2.6 5.9L21 9l-4.5 4.4L17.6 20 12 16.8 6.4 20l1.1-6.6L3 9l6.4-1.1z',danger:false,paperOnly:true,action:()=>{ const name = prompt('Player name to toggle op status for:'); if(!name) return; const deop = confirm('OK = OP this player, Cancel = DEOP this player'); runCommand((deop?'op ':'deop ')+name, (deop?'Opped ':'De-opped ')+name); }},
+  {t:'Save-Off / Save-On',d:'Pause world autosave (for safe file copies)',icon:'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',danger:false,paperOnly:true,action:()=>{ const off = confirm('OK = save-off, Cancel = save-on'); runCommand(off?'save-off':'save-on', off?'Autosave paused':'Autosave resumed'); }},
+];
+async function runCommand(cmd, successMsg){
+  if(serverState!=='online'){ toast('Server is offline — nothing to send that to.'); return; }
+  try{ await api('/api/command', { method:'POST', body: JSON.stringify({ command: cmd }) }); toast(successMsg); }
+  catch(err){ toast('Failed: '+err.message); }
+}
+function renderTaskGrid(){
+  const grid = document.getElementById('taskGrid');
+  grid.innerHTML = '';
+  const visible = tasks.filter(tk => !tk.paperOnly || serverType !== 'velocity');
+  visible.forEach(tk=>{
+    const el = document.createElement('div');
+    el.className='task-tile'+(tk.danger?' danger':'');
+    el.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="${tk.icon}"/></svg>
+      <div class="tt">${tk.t}</div><div class="td">${tk.d}</div>`;
+    el.addEventListener('click',()=> tk.action ? tk.action() : toast(tk.msg));
+    grid.appendChild(el);
+  });
+  if(serverType === 'velocity'){
+    const note = document.createElement('div');
+    note.className = 'empty-state';
+    note.style.gridColumn = '1/-1';
+    note.textContent = "Some Paper-only tasks are hidden for Velocity — use the Console tab for proxy-specific commands.";
+    grid.appendChild(note);
+  }
+}
+document.getElementById('broadcastBtn').addEventListener('click',()=>{
+  const inp = document.getElementById('broadcastInput');
+  const msg = inp.value.trim();
+  if(!msg) return;
+  runCommand('say '+msg, 'Broadcast sent');
+  inp.value='';
+});
+
+/* ---------- MC CONFIGURATION ---------- */
+let cfgEntries = []; // [{section, key, value, type}]
+function cfgFullKey(e){ return e.section ? e.section+'.'+e.key : e.key; }
+function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderConfigList(filter){
+  const list = document.getElementById('configList');
+  const q = (filter||'').toLowerCase();
+  list.innerHTML = '';
+  let lastSection = undefined;
+  let shown = 0;
+  cfgEntries.forEach((e)=>{
+    const fullKey = cfgFullKey(e);
+    if(q && !fullKey.toLowerCase().includes(q) && !e.value.toLowerCase().includes(q)) return;
+    shown++;
+    if(e.section !== lastSection){
+      lastSection = e.section;
+      if(e.section){
+        const div = document.createElement('div');
+        div.className = 'config-section-divider';
+        div.textContent = '[' + e.section + ']';
+        list.appendChild(div);
+      }
+    }
+    const row = document.createElement('div');
+    row.className = 'config-row';
+    if(e.type === 'bool'){
+      row.innerHTML = `<div class="config-row-label"><span class="config-row-key">${e.key}</span></div>
+        <div class="toggle ${e.value==='true'?'on':''}" data-fullkey="${fullKey}"></div>`;
+      row.querySelector('.toggle').addEventListener('click', function(){ this.classList.toggle('on'); });
+    } else {
+      const inputType = e.type === 'number' ? 'number' : (/password/i.test(e.key) ? 'password' : 'text');
+      row.innerHTML = `<div class="config-row-label"><span class="config-row-key">${e.key}</span></div>
+        <input type="${inputType}" data-fullkey="${fullKey}" value="${escapeAttr(e.value)}">`;
+    }
+    list.appendChild(row);
+  });
+  if(shown===0){
+    list.innerHTML = '<div class="empty-state">No settings match your search.</div>';
+  }
+}
+
+async function loadConfig(){
+  try{
+    const c = await api('/api/config');
+    cfgEntries = c.entries;
+    const isVelocity = c.type === 'velocity';
+    document.getElementById('configTabTitle').textContent = isVelocity ? 'Proxy Configuration' : 'MC Configuration';
+    document.getElementById('configTabSub').textContent = isVelocity
+      ? 'velocity.toml — restart required for most values'
+      : 'server.properties — restart or /reload required for some values';
+    document.getElementById('configFileTitle').textContent = c.fileName;
+    document.getElementById('configFileNote').textContent = 'Every editable key in the file — nothing curated or hidden';
+    const advNote = document.getElementById('configAdvancedNote');
+    if(isVelocity){
+      advNote.style.display = '';
+      advNote.innerHTML = '<b>Note:</b> Array/table values (like <code>servers.try</code>) aren\'t shown here — edit those directly via the File Manager.';
+    } else {
+      advNote.style.display = 'none';
+    }
+    renderConfigList(document.getElementById('configSearch').value);
+  } catch(err){ toast('Could not load config: '+err.message); }
+}
+document.getElementById('configSearch').addEventListener('input', (e)=> renderConfigList(e.target.value));
+document.getElementById('saveConfigBtn').addEventListener('click', async ()=>{
+  const updates = {};
+  document.querySelectorAll('#configList [data-fullkey]').forEach((el)=>{
+    const fullKey = el.dataset.fullkey;
+    if(el.classList.contains('toggle')){ updates[fullKey] = el.classList.contains('on') ? 'true' : 'false'; }
+    else { updates[fullKey] = el.value; }
+  });
+  try{ const r = await api('/api/config', {method:'PUT', body: JSON.stringify({updates})}); toast(r.note || 'Saved'); loadConfig(); }
+  catch(err){ toast('Save failed: '+err.message); }
+});
+document.getElementById('revertConfigBtn').addEventListener('click', loadConfig);
+
+/* ---------- PANEL BRANDING SAVE ---------- */
+document.getElementById('saveBrandingBtn').addEventListener('click', async ()=>{
+  const input = document.getElementById('cfgServerName');
+  const serverName = input.value.trim();
+  if(!serverName){ toast('Server name cannot be empty'); return; }
+  try{
+    await api('/api/branding', { method:'PUT', body: JSON.stringify({ serverName }) });
+    toast('Server name updated');
+    applyBranding();
+  } catch(err){ toast('Failed: '+err.message); }
+});
+
+/* ---------- INSTALLED PLUGINS ---------- */
+async function renderInstalledPlugins(){
+  const list = document.getElementById('installedPluginList');
+  list.innerHTML = `<div class="empty-state">Loading...</div>`;
+  try{
+    const items = await api('/api/plugins/installed');
+    document.getElementById('installedCount').textContent = items.length+' plugin'+(items.length===1?'':'s')+' installed';
+    if(items.length===0){ list.innerHTML = `<div class="empty-state">No plugins installed yet.</div>`; return; }
+    list.innerHTML = '';
+    items.forEach(p=>{
+      const row = document.createElement('div');
+      row.className = 'row-card';
+      row.innerHTML = `
+        <div class="row-left">
+          <div class="row-icon">${p.fileName.slice(0,2).toUpperCase()}</div>
+          <div><div class="row-title">${p.fileName}</div><div class="row-sub">${fmtBytes(p.sizeBytes)} · installed ${fmtDate(p.installedAt)}</div></div>
+        </div>
+        <div class="row-actions"><button class="btn btn-sm btn-danger" data-act="remove">Remove</button></div>`;
+      row.querySelector('[data-act="remove"]').addEventListener('click', async ()=>{
+        if(!confirm('Remove '+p.fileName+'? Requires a restart to take effect.')) return;
+        try{ await api('/api/plugins/installed/'+encodeURIComponent(p.fileName), {method:'DELETE'}); renderInstalledPlugins(); toast('Removed'); }
+        catch(err){ toast('Failed: '+err.message); }
+      });
+      list.appendChild(row);
+    });
+  } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+document.getElementById('installedSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#installedPluginList .row-card').forEach(row=>{
+    row.style.display = row.querySelector('.row-title').textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+});
+
+/* ---------- PLUGIN INSTALLER (Hangar search) ---------- */
+let pluginSearchTimer = null;
+document.getElementById('pluginSearch').addEventListener('input', (e)=>{
+  clearTimeout(pluginSearchTimer);
+  const q = e.target.value.trim();
+  pluginSearchTimer = setTimeout(()=>searchPlugins(q), 400);
+});
+async function searchPlugins(q){
+  const catalog = document.getElementById('pluginCatalog');
+  catalog.innerHTML = `<div class="empty-state">Searching...</div>`;
+  try{
+    const results = await api('/api/plugins/search?q='+encodeURIComponent(q));
+    if(results.length===0){ catalog.innerHTML = `<div class="empty-state">No results.</div>`; return; }
+    catalog.innerHTML = '';
+    results.forEach(p=>{
+      const [owner, slug] = p.namespace.split('/');
+      const card = document.createElement('div');
+      card.className = 'plugin-card';
+      card.innerHTML = `
+        <div class="plugin-card-top">
+          <div class="plugin-icon">${(slug||p.slug).slice(0,2).toUpperCase()}</div>
+          <div><div class="plugin-name">${slug||p.slug}</div><div class="plugin-author">by ${owner||'—'}</div></div>
+        </div>
+        <div class="plugin-desc">${(p.description||'No description provided.').slice(0,140)}</div>
+        <div class="plugin-meta"><span>★ ${p.stars}</span><span>${p.downloads} downloads</span></div>
+        <div class="plugin-card-foot"><button class="btn btn-sm btn-primary" data-act="install">Install</button></div>`;
+      card.querySelector('[data-act="install"]').addEventListener('click', async (e)=>{
+        e.target.disabled = true; e.target.textContent = 'Installing...';
+        try{ await api('/api/plugins/install', {method:'POST', body: JSON.stringify({owner, slug: slug||p.slug})}); toast('Installed '+(slug||p.slug)); e.target.textContent = 'Installed'; }
+        catch(err){ toast('Install failed: '+err.message); e.target.disabled=false; e.target.textContent='Install'; }
+      });
+      catalog.appendChild(card);
+    });
+  } catch(err){ catalog.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+
+/* ---------- PLAYERS ---------- */
+async function renderPlayers(){
+  const paperView = document.getElementById('playersPaperView');
+  const velocityView = document.getElementById('playersVelocityView');
+  const toolbar = document.getElementById('playerToolbar');
+  const sub = document.getElementById('playersSub');
+
+  let resp;
+  try{ resp = await api('/api/players'); }
+  catch(err){ toast('Could not load players: '+err.message); return; }
+
+  if(resp.type === 'velocity'){
+    paperView.style.display = 'none';
+    toolbar.style.display = 'none';
+    velocityView.style.display = '';
+    sub.textContent = 'Velocity proxy — raw player list';
+    document.getElementById('playersVelocityRaw').textContent =
+      resp.raw !== null && resp.raw !== undefined && resp.raw !== ''
+        ? resp.raw
+        : (resp.error ? ('Error: '+resp.error) : 'Server is offline, or glist returned nothing.');
+    return;
+  }
+
+  paperView.style.display = '';
+  toolbar.style.display = '';
+  velocityView.style.display = 'none';
+  sub.textContent = 'Online and previously-seen players';
+
+  const body = document.getElementById('playerBody');
+  const players = resp.players || [];
+  if(players.length===0){ body.innerHTML = `<tr><td colspan="5" style="color:var(--text-faint);padding:22px 10px;text-align:center;">No player data yet.</td></tr>`; return; }
+  body.innerHTML = '';
+  players.forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="file-name"><div class="avatar">${p.name.slice(0,2).toUpperCase()}</div>${p.name}</div></td>
+      <td class="rank-${p.rank}">${p.rank}</td>
+      <td><span class="badge ${p.online?'on':'off'}">${p.online?'ONLINE':'OFFLINE'}</span></td>
+      <td>${p.whitelisted?'Yes':'No'}</td>
+      <td style="text-align:right;">
+        ${p.online ? '<button class="btn btn-sm btn-ghost" data-act="kick">Kick</button>' : ''}
+        <button class="btn btn-sm btn-ghost" data-act="op">${p.rank==='member'?'Op':'Deop'}</button>
+        <button class="btn btn-sm btn-danger" data-act="ban">${p.banned?'Unban':'Ban'}</button>
+      </td>`;
+    tr.querySelector('[data-act="op"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.rank==='member'?'/op':'/deop'), {method:'POST'}); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
+    });
+    tr.querySelector('[data-act="kick"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+'/kick', {method:'POST', body: JSON.stringify({})}); toast('Kicked '+p.name); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
+    });
+    tr.querySelector('[data-act="ban"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.banned?'/unban':'/ban'), {method:'POST', body: JSON.stringify({})}); toast((p.banned?'Unbanned ':'Banned ')+p.name); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
+    });
+    body.appendChild(tr);
+  });
+}
+document.getElementById('playerSearch').addEventListener('input', (e)=>{
+  const q = e.target.value.toLowerCase();
+  document.querySelectorAll('#playerBody tr').forEach(row=>{ row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+});
+
+/* ---------- SFTP ---------- */
+async function renderSftp(){
+  try{
+    const info = await api('/api/sftp-info');
+    document.getElementById('sftpHost').textContent = info.host;
+    document.getElementById('sftpPort').textContent = info.port;
+    document.getElementById('sftpUser').textContent = info.username;
+    document.getElementById('sftpConn').textContent = info.connectionString;
+    document.getElementById('sftpNote').innerHTML = `<b>Note:</b> ${info.note}`;
+  } catch(err){ toast('Could not load SFTP info: '+err.message); }
+}
+document.querySelectorAll('.copy-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    let value = btn.dataset.copy;
+    if(btn.dataset.copyTarget){ const el = document.getElementById(btn.dataset.copyTarget); value = el ? el.textContent : ''; }
+    if(!value || value === '—'){ toast('Nothing to copy yet'); return; }
+    navigator.clipboard?.writeText(value).catch(()=>{});
+    btn.classList.add('copied'); btn.textContent='✓'; toast('Copied to clipboard');
+    setTimeout(()=>{btn.classList.remove('copied');btn.textContent='⧉';},1400);
+  });
+});
+
+/* ---------- ADMINISTRATOR MANAGEMENT ---------- */
+function genPassword(){
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  let out = '';
+  for(let i=0;i<12;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+document.getElementById('newAdminPass').value = genPassword();
+document.getElementById('regenAdminPassBtn').addEventListener('click', ()=>{
+  document.getElementById('newAdminPass').value = genPassword();
+});
+async function renderAdmins(){
+  const list = document.getElementById('adminList');
+  list.innerHTML = `<div class="empty-state">Loading...</div>`;
+  try{
+    const admins = await api('/api/admins');
+    if(admins.length===0){ list.innerHTML = `<div class="empty-state">No administrators yet.</div>`; return; }
+    list.innerHTML = '';
+    admins.forEach(a=>{
+      const row = document.createElement('div');
+      row.className = 'row-card';
+      row.innerHTML = `
+        <div class="row-left">
+          <div class="avatar">${a.username.slice(0,2).toUpperCase()}</div>
+          <div><div class="row-title">${a.username}</div><div class="row-sub"><span class="role-badge role-${a.role}">${a.role}</span></div></div>
+        </div>
+        <div class="row-actions">
+          <button class="btn btn-sm" data-act="reset">Reset Password</button>
+          <button class="btn btn-sm btn-danger" data-act="remove">Remove</button>
+        </div>`;
+      row.querySelector('[data-act="reset"]').addEventListener('click', async ()=>{
+        const newPass = prompt(`New password for "${a.username}" (leave blank to auto-generate):`, '');
+        if(newPass === null) return; // cancelled
+        const password = newPass.trim() || genPassword();
+        if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
+        try{
+          await api('/api/admins/'+encodeURIComponent(a.username), {method:'PATCH', body: JSON.stringify({password})});
+          toast(`Password for ${a.username} reset to: ${password}`);
+        } catch(err){ toast('Failed: '+err.message); }
+      });
+      row.querySelector('[data-act="remove"]').addEventListener('click', async ()=>{
+        if(!confirm('Remove administrator "'+a.username+'"?')) return;
+        try{ await api('/api/admins/'+encodeURIComponent(a.username), {method:'DELETE'}); renderAdmins(); toast('Removed'); }
+        catch(err){ toast('Failed: '+err.message); }
+      });
+      list.appendChild(row);
+    });
+  } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+document.getElementById('addAdminBtn').addEventListener('click', async ()=>{
+  const username = document.getElementById('newAdminUser').value.trim();
+  const role = document.getElementById('newAdminRole').value;
+  const password = document.getElementById('newAdminPass').value.trim() || genPassword();
+  if(!username){ toast('Enter a username'); return; }
+  if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
+  try{
+    await api('/api/admins', {method:'POST', body: JSON.stringify({username, password, role})});
+    toast(`Added ${username}. Password: ${password}`);
+    document.getElementById('newAdminUser').value = '';
+    document.getElementById('newAdminPass').value = genPassword();
+    renderAdmins();
+  } catch(err){ toast('Failed: '+err.message); }
+});
+</script>
+</body>
+</html>

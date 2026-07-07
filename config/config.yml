@@ -1,0 +1,75 @@
+# =============================================================================
+# Vexium Panel — configuration
+# Edit this file to match your setup, then (re)start the panel.
+# =============================================================================
+
+panel:
+  # Interface to bind the web server to. Keep this 127.0.0.1 unless you're
+  # putting a reverse proxy in front of it, or you actually want it reachable
+  # over the LAN.
+  bind: "127.0.0.1"
+  port: 8080
+  # Random string used to sign session cookies. Change this to something
+  # random before you expose the panel to anyone.
+  sessionSecret: "CHANGE_ME_TO_A_RANDOM_STRING"
+
+server:
+  # "paper" or "velocity". Changes: the stop command sent on Stop/Restart
+  # ("stop" vs "shutdown"), which config file the MC Configuration tab
+  # edits (server.properties vs velocity.toml), the Hangar platform used
+  # by the Plugin Installer, and whether Player Manager shows Paper-only
+  # actions (op/ban/whitelist — Velocity doesn't have these).
+  type: "paper"
+  # Absolute path to the folder containing paper.jar (or velocity.jar), etc.
+  directory: "/path/to/your/server"
+  jarFile: "paper.jar"
+  javaBin: "java"
+  # JVM flags, applied before -jar
+  javaArgs:
+    - "-Xms4G"
+    - "-Xmx8G"
+    - "-XX:+UseG1GC"
+  # Args applied after the jar file name
+  extraArgs:
+    - "nogui"
+  # Path (relative to server.directory) where the optional Vexium Bridge
+  # companion plugin writes live TPS/MSPT/player stats. Paper-only — has
+  # no effect and isn't shown when server.type is "velocity". See /plugin
+  # in this repo for the plugin source and build instructions. If this
+  # file doesn't exist, the panel just shows "Not installed" on the TPS
+  # card — nothing else depends on it, and no console commands are ever
+  # sent for this.
+  bridgeStatsFile: "plugins/VexiumBridge/stats.json"
+
+sftp:
+  # Purely informational — this panel does not manage SFTP/SSH itself.
+  # Fill these in to match whatever SFTP/SSH server is actually running on
+  # this box (e.g. the OS's sshd). Password is intentionally not stored here.
+  host: "your.server.hostname"
+  port: 22
+  username: "your-username"
+
+backups:
+  directory: "./data/backups"
+  # Paths relative to server.directory that get included in each backup.
+  # For a Velocity proxy, you'd typically want something like:
+  #   ["velocity.toml", "forwarding.secret", "plugins"]
+  include:
+    - "world"
+    - "world_nether"
+    - "world_the_end"
+    - "plugins"
+
+schedules:
+  file: "./data/schedules.json"
+
+activity:
+  file: "./data/activity.yml"
+
+branding:
+  # Server display name and icon shown in the panel. Editable from the
+  # MC Configuration tab, or by hand here / in branding.yml.
+  file: "./config/branding.yml"
+
+users:
+  file: "./config/users.yml"

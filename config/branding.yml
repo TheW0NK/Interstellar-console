@@ -1,0 +1,12 @@
+# =============================================================================
+# Vexium Panel — branding
+# =============================================================================
+# Shown in the sidebar, login screen, and browser tab. Editable from the
+# panel itself (MC Configuration tab -> Panel Branding), or by hand here.
+#
+# The logo is read automatically from server-icon.png in your server
+# directory (the same 64x64 icon Minecraft shows in the multiplayer list)
+# — there's nothing to configure for that, just drop the file in.
+# =============================================================================
+
+serverName: "My Minecraft Server"

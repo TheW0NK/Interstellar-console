@@ -1,0 +1,6 @@
+name: VexiumBridge
+version: '${project.version}'
+main: net.vexium.bridge.VexiumBridge
+api-version: '1.20'
+author: Vexium Panel
+description: Writes live TPS/MSPT/player-count stats to a small JSON file for the Vexium Panel to read directly, with zero console commands.

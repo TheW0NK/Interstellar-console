@@ -1,0 +1,21 @@
+{
+  "name": "vexium-panel",
+  "version": "1.0.0",
+  "description": "Self-hosted control panel for the Vexium Paper server. Owns the java process directly and drives commands over RCON.",
+  "main": "src/server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/server.js",
+    "adduser": "node scripts/add-user.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "express-session": "^1.18.0",
+    "ws": "^8.18.0",
+    "js-yaml": "^4.1.0",
+    "bcryptjs": "^2.4.3",
+    "multer": "^2.0.0",
+    "node-cron": "^3.0.3",
+    "check-disk-space": "^3.4.0"
+  }
+}
