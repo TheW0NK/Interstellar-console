@@ -1,7 +1,13 @@
 'use strict';
 const fs = require('fs');
+const path = require('path');
 const os = require('os');
 const checkDiskSpace = require('check-disk-space').default;
+
+// If the bridge file hasn't been updated in this long, treat it as stale
+// (server probably stopped without a clean plugin onDisable, or crashed) —
+// better to say "no data" than show a confidently wrong last-known TPS.
+const BRIDGE_STALE_MS = 15000;
 
 function parseXmxMB(javaArgs) {
   const arg = (javaArgs || []).find((a) => /^-Xmx/i.test(a));
@@ -22,6 +28,36 @@ class StatsSampler {
     this.clockTicks = 100; // USER_HZ — standard on Linux
     this._prev = null; // { utime, stime, hz_time }
     this.memMaxMB = parseXmxMB(config.server.javaArgs) || 4096;
+    this.bridgeFile = config.server.bridgeStatsFile
+      ? path.join(config.server.directory, config.server.bridgeStatsFile)
+      : null;
+  }
+
+  /**
+   * Reads the optional Vexium Bridge plugin's stats.json, if present and
+   * fresh. Never throws — returns { available: false } for any failure
+   * (file missing, malformed, stale, plugin not installed, etc.) so a
+   * broken/missing bridge never affects the rest of the stats payload.
+   */
+  readBridgeStats() {
+    if (!this.bridgeFile) return { available: false };
+    try {
+      const raw = fs.readFileSync(this.bridgeFile, 'utf8');
+      const data = JSON.parse(raw);
+      if (!data || typeof data.updatedAt !== 'number') return { available: false };
+      if (Date.now() - data.updatedAt > BRIDGE_STALE_MS) return { available: false, stale: true };
+      return {
+        available: true,
+        tps: data.tps1m,
+        tps5m: data.tps5m,
+        tps15m: data.tps15m,
+        mspt: data.mspt,
+        playersOnline: data.playersOnline,
+        playersMax: data.playersMax,
+      };
+    } catch (err) {
+      return { available: false };
+    }
   }
 
   async _readProcCpuMem(pid) {
@@ -86,6 +122,7 @@ class StatsSampler {
       memMB: Number(memMB.toFixed(0)),
       memMaxMB: this.memMaxMB,
       disk,
+      bridge: this.readBridgeStats(),
     };
   }
 }

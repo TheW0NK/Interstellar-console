@@ -1,12 +1,28 @@
 'use strict';
 const { spawn } = require('child_process');
 const { EventEmitter } = require('events');
-const RconClient = require('./rcon');
 
 const DONE_RE = /Done \(/;
-const LOG_RE = /^\[(\d{2}:\d{2}:\d{2})\s+(INFO|WARN|ERROR|DEBUG)\]:\s?(.*)$/;
+const ANSI_RUN = '(?:\\x1b\\[[0-9;]*m)*';
+// Tolerates ANSI escape codes interspersed around the timestamp/level/colon
+// (common — Paper colorizes the whole bracket by level) while preserving
+// any ANSI still embedded in the message body itself (e.g. colored chat)
+// so the frontend can render it instead of showing raw escape junk.
+const LOG_RE = new RegExp(
+  '^' + ANSI_RUN + '\\[(\\d{2}:\\d{2}:\\d{2})' + ANSI_RUN + '\\s+' + ANSI_RUN +
+  '(INFO|WARN|ERROR|DEBUG)' + ANSI_RUN + '\\]:' + ANSI_RUN + '\\s?'
+);
+const ANSI_STRIP_RE = /\x1b\[[0-9;]*m/g;
 
 const VALID_STATES = ['offline', 'starting', 'online', 'stopping', 'restarting'];
+
+// How long to wait after a command for the server to finish printing its
+// response to the console: resolve early once output goes quiet, but never
+// wait longer than the hard cap. There's no request/response framing on
+// stdin like there is with RCON, so this is a best-effort capture of
+// "whatever the server printed right after we sent the command."
+const RESPONSE_QUIET_MS = 250;
+const RESPONSE_HARD_TIMEOUT_MS = 1500;
 
 class ProcessManager extends EventEmitter {
   constructor(config) {
@@ -17,7 +33,9 @@ class ProcessManager extends EventEmitter {
     this.startedAt = null;
     this.history = [];
     this.historyLimit = 3000;
-    this.rcon = null;
+    // Commands are serialized so two concurrent sendCommand() calls can't
+    // both listen for output at once and steal each other's response lines.
+    this._commandQueue = Promise.resolve();
     this._restartPending = false;
   }
 
@@ -49,7 +67,8 @@ class ProcessManager extends EventEmitter {
 
     let child;
     try {
-      child = spawn(javaBin, args, { cwd: directory });
+      // stdin must be a pipe (not 'inherit') so we can write commands to it.
+      child = spawn(javaBin, args, { cwd: directory, stdio: ['pipe', 'pipe', 'pipe'] });
     } catch (err) {
       this.pushLog(`Failed to spawn process: ${err.message}`, 'ERROR');
       this._setState('offline');
@@ -79,7 +98,6 @@ class ProcessManager extends EventEmitter {
       this.pushLog(`Process exited (code=${code}, signal=${signal || 'none'})`, code === 0 ? 'INFO' : 'ERROR');
       this.child = null;
       this.startedAt = null;
-      if (this.rcon) { try { this.rcon.close(); } catch (e) {} this.rcon = null; }
       const restart = this._restartPending;
       this._restartPending = false;
       this._setState('offline');
@@ -94,50 +112,88 @@ class ProcessManager extends EventEmitter {
   _handleLine(line) {
     if (line.length === 0) return;
     const m = line.match(LOG_RE);
-    if (m) this.pushLog(m[3], m[2]);
-    else this.pushLog(line, 'INFO');
+    if (m) {
+      this.pushLog(line.slice(m[0].length), m[2]);
+    } else {
+      this.pushLog(line, 'INFO');
+    }
 
-    if (this.state === 'starting' && DONE_RE.test(line)) {
+    // Strip ANSI before testing for the startup marker — in principle a
+    // color reset could land between "Done" and "(", however unlikely.
+    if (this.state === 'starting' && DONE_RE.test(line.replace(ANSI_STRIP_RE, ''))) {
       this.startedAt = Date.now();
       this._setState('online');
-      this._connectRcon().catch(() => {});
     }
   }
 
-  async _connectRcon(retries = 6) {
-    const { host, port, password } = this.config.rcon;
-    for (let i = 0; i < retries; i++) {
-      try {
-        const client = new RconClient(host, port, password);
-        await client.connect();
-        this.rcon = client;
-        this.pushLog('RCON connected', 'INFO');
-        this.emit('rcon-ready');
-        client.socket.on('close', () => { if (this.rcon === client) this.rcon = null; });
-        return;
-      } catch (err) {
-        await new Promise((r) => setTimeout(r, 2000));
-      }
-    }
-    this.pushLog('Could not establish RCON connection after retries — is rcon enabled in server.properties?', 'ERROR');
+  /**
+   * Write a command to the server's stdin and capture whatever the console
+   * prints in response over a short window. Commands are serialized through
+   * this._commandQueue so overlapping calls don't cross-contaminate each
+   * other's captured output.
+   */
+  sendCommand(cmd, { logAsUser = true } = {}) {
+    const run = () => this._sendCommandNow(cmd, logAsUser);
+    const result = this._commandQueue.then(run, run);
+    // Keep the queue alive even if this command's promise rejects, so the
+    // next queued command still runs.
+    this._commandQueue = result.catch(() => {});
+    return result;
   }
 
-  async sendCommand(cmd, { logAsUser = true } = {}) {
-    if (!this.rcon || !this.rcon.authenticated) throw new Error('RCON is not connected — the server may still be starting.');
+  _sendCommandNow(cmd, logAsUser) {
+    if (!this.child || !this.child.stdin || this.child.stdin.destroyed) {
+      return Promise.reject(new Error('No running process to send commands to — is the server online?'));
+    }
     if (logAsUser) this.pushLog('> ' + cmd, 'CMD');
-    const response = await this.rcon.command(cmd);
-    if (logAsUser && response) this.pushLog(response, 'INFO');
-    return response;
+
+    const captured = [];
+    return new Promise((resolve, reject) => {
+      let quietTimer = null;
+      let hardTimer = null;
+
+      const finish = () => {
+        clearTimeout(quietTimer);
+        clearTimeout(hardTimer);
+        this.removeListener('log', onLog);
+        resolve(captured.join('\n'));
+      };
+      const onLog = (entry) => {
+        if (entry.level === 'CMD') return; // don't capture our own echoed command
+        captured.push(entry.text);
+        clearTimeout(quietTimer);
+        quietTimer = setTimeout(finish, RESPONSE_QUIET_MS);
+      };
+
+      this.on('log', onLog);
+      quietTimer = setTimeout(finish, RESPONSE_QUIET_MS);
+      hardTimer = setTimeout(finish, RESPONSE_HARD_TIMEOUT_MS);
+
+      try {
+        this.child.stdin.write(cmd + '\n');
+      } catch (err) {
+        this.removeListener('log', onLog);
+        clearTimeout(quietTimer);
+        clearTimeout(hardTimer);
+        reject(err);
+      }
+    });
+  }
+
+  /** Paper/vanilla stop with "stop"; Velocity stops with "shutdown". */
+  _stopCommand() {
+    return this.config.server.type === 'velocity' ? 'shutdown' : 'stop';
   }
 
   async stop() {
     if (this.state !== 'online') throw new Error('Server is not online');
     this._setState('stopping');
+    const cmd = this._stopCommand();
     try {
-      await this.sendCommand('stop', { logAsUser: false });
-      this.pushLog('> stop', 'CMD');
+      await this.sendCommand(cmd, { logAsUser: false });
+      this.pushLog('> ' + cmd, 'CMD');
     } catch (err) {
-      this.pushLog('RCON stop failed (' + err.message + '), sending SIGTERM', 'WARN');
+      this.pushLog(`Sending "${cmd}" failed (` + err.message + '), sending SIGTERM', 'WARN');
       if (this.child) this.child.kill('SIGTERM');
     }
   }
@@ -146,11 +202,12 @@ class ProcessManager extends EventEmitter {
     if (this.state !== 'online') throw new Error('Server is not online');
     this._restartPending = true;
     this._setState('restarting');
+    const cmd = this._stopCommand();
     try {
-      await this.sendCommand('stop', { logAsUser: false });
-      this.pushLog('> stop (restart)', 'CMD');
+      await this.sendCommand(cmd, { logAsUser: false });
+      this.pushLog(`> ${cmd} (restart)`, 'CMD');
     } catch (err) {
-      this.pushLog('RCON stop failed (' + err.message + '), sending SIGTERM', 'WARN');
+      this.pushLog(`Sending "${cmd}" failed (` + err.message + '), sending SIGTERM', 'WARN');
       if (this.child) this.child.kill('SIGTERM');
     }
   }

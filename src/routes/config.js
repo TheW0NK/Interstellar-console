@@ -3,31 +3,19 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 
-// Keys the "MC Configuration" tab exposes, mapped to server.properties keys.
-const FIELD_MAP = {
-  motd: 'motd',
-  maxPlayers: 'max-players',
-  difficulty: 'difficulty',
-  gamemode: 'gamemode',
-  viewDistance: 'view-distance',
-  simulationDistance: 'simulation-distance',
-  pvp: 'pvp',
-  onlineMode: 'online-mode',
-  whitelist: 'white-list',
-  allowFlight: 'allow-flight',
-  commandBlocks: 'enable-command-block',
-};
-
-function parseProperties(text) {
-  const map = {};
+/* ---------- server.properties (Paper/vanilla) — flat key=value ---------- */
+function parsePropertiesOrdered(text) {
+  const entries = [];
   text.split('\n').forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith('#')) return;
     const idx = trimmed.indexOf('=');
     if (idx === -1) return;
-    map[trimmed.slice(0, idx).trim()] = trimmed.slice(idx + 1).trim();
+    const key = trimmed.slice(0, idx).trim();
+    const value = trimmed.slice(idx + 1).trim();
+    entries.push({ section: '', key, value, type: /^(true|false)$/.test(value) ? 'bool' : (/^-?\d+(\.\d+)?$/.test(value) ? 'number' : 'string') });
   });
-  return map;
+  return entries;
 }
 
 function writeProperties(originalText, updates) {
@@ -51,9 +39,61 @@ function writeProperties(originalText, updates) {
   return out.join('\n');
 }
 
+/* ---------- velocity.toml — best-effort flat scalar editor ----------
+ * Only simple "key = value" scalar assignments (string/number/bool) are
+ * exposed and editable. Arrays and inline tables (e.g. the servers.try
+ * list) are left alone entirely — those need the File Manager, since a
+ * generic key=value editor can't safely round-trip TOML's richer types. */
+function parseTomlOrdered(text) {
+  const entries = [];
+  let section = '';
+  text.split('\n').forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return;
+    const sectionMatch = trimmed.match(/^\[([^\[\]]+)\]$/);
+    if (sectionMatch) { section = sectionMatch[1]; return; }
+    const kv = trimmed.match(/^([A-Za-z0-9_.-]+)\s*=\s*(.+)$/);
+    if (!kv) return;
+    const key = kv[1];
+    const rawValue = kv[2].trim();
+    if (rawValue.startsWith('[') || rawValue.startsWith('{')) return; // array/inline table — skip
+    let type, value;
+    if (rawValue === 'true' || rawValue === 'false') { type = 'bool'; value = rawValue; }
+    else if (/^-?\d+(\.\d+)?$/.test(rawValue)) { type = 'number'; value = rawValue; }
+    else if (rawValue.startsWith('"') && rawValue.endsWith('"') && rawValue.length >= 2) {
+      type = 'string'; value = rawValue.slice(1, -1);
+    } else { type = 'string'; value = rawValue; }
+    entries.push({ section, key, value, type });
+  });
+  return entries;
+}
+
+function writeToml(originalText, updatesByFullKey) {
+  let section = '';
+  const lines = originalText.split('\n');
+  const out = lines.map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) return line;
+    const sectionMatch = trimmed.match(/^\[([^\[\]]+)\]$/);
+    if (sectionMatch) { section = sectionMatch[1]; return line; }
+    const kv = trimmed.match(/^([A-Za-z0-9_.-]+)\s*=\s*(.+)$/);
+    if (!kv) return line;
+    const key = kv[1];
+    const fullKey = section ? `${section}.${key}` : key;
+    if (!Object.prototype.hasOwnProperty.call(updatesByFullKey, fullKey)) return line;
+    const { value, type } = updatesByFullKey[fullKey];
+    const serialized = (type === 'bool' || type === 'number') ? String(value) : `"${String(value).replace(/"/g, '\\"')}"`;
+    const indent = (line.match(/^(\s*)/) || ['', ''])[1];
+    return `${indent}${key} = ${serialized}`;
+  });
+  return out.join('\n');
+}
+
 module.exports = function configRoutes(config, activityLog) {
   const router = express.Router();
-  const propsPath = path.join(config.server.directory, 'server.properties');
+  const isVelocity = config.server.type === 'velocity';
+  const configFileName = isVelocity ? 'velocity.toml' : 'server.properties';
+  const configPath = path.join(config.server.directory, configFileName);
 
   function actor(req) {
     return req.session && req.session.user ? req.session.user.username : null;
@@ -61,33 +101,43 @@ module.exports = function configRoutes(config, activityLog) {
 
   router.get('/config', (req, res) => {
     try {
-      const text = fs.readFileSync(propsPath, 'utf8');
-      const raw = parseProperties(text);
-      const values = {};
-      for (const [field, key] of Object.entries(FIELD_MAP)) {
-        values[field] = raw[key] !== undefined ? raw[key] : null;
-      }
-      res.json(values);
+      const text = fs.readFileSync(configPath, 'utf8');
+      const entries = isVelocity ? parseTomlOrdered(text) : parsePropertiesOrdered(text);
+      res.json({ type: config.server.type, fileName: configFileName, entries });
     } catch (err) {
-      res.status(400).json({ error: 'Could not read server.properties: ' + err.message });
+      res.status(400).json({ error: `Could not read ${configFileName}: ` + err.message });
     }
   });
 
   router.put('/config', express.json(), (req, res) => {
     try {
-      const text = fs.readFileSync(propsPath, 'utf8');
-      const updates = {};
-      for (const [field, key] of Object.entries(FIELD_MAP)) {
-        if (Object.prototype.hasOwnProperty.call(req.body, field) && req.body[field] !== null) {
-          updates[key] = req.body[field];
+      const text = fs.readFileSync(configPath, 'utf8');
+      const rawUpdates = (req.body && req.body.updates) || {};
+      let newText;
+
+      if (isVelocity) {
+        const entries = parseTomlOrdered(text);
+        const updatesByFullKey = {};
+        for (const e of entries) {
+          const fullKey = e.section ? `${e.section}.${e.key}` : e.key;
+          if (Object.prototype.hasOwnProperty.call(rawUpdates, fullKey)) {
+            updatesByFullKey[fullKey] = { value: rawUpdates[fullKey], type: e.type };
+          }
         }
+        newText = writeToml(text, updatesByFullKey);
+      } else {
+        newText = writeProperties(text, rawUpdates);
       }
-      const newText = writeProperties(text, updates);
-      fs.writeFileSync(propsPath, newText, 'utf8');
-      activityLog.add('config', `${actor(req)} updated server.properties`, actor(req));
-      res.json({ ok: true, note: 'Most values need a server restart (or /reload) to take effect.' });
+
+      fs.writeFileSync(configPath, newText, 'utf8');
+      const actorName = actor(req);
+      activityLog.add('config', `${actorName} updated ${configFileName}`, actorName);
+      const note = isVelocity
+        ? 'Most values need a proxy restart to take effect.'
+        : 'Most values need a restart (or /reload on Paper) to take effect.';
+      res.json({ ok: true, note });
     } catch (err) {
-      res.status(400).json({ error: 'Could not write server.properties: ' + err.message });
+      res.status(400).json({ error: `Could not write ${configFileName}: ` + err.message });
     }
   });
 

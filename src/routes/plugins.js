@@ -16,6 +16,7 @@ function safeJarName(name) {
 module.exports = function pluginRoutes(config, pm, activityLog) {
   const router = express.Router();
   const pluginsDir = path.join(config.server.directory, 'plugins');
+  const hangarPlatform = config.server.type === 'velocity' ? 'VELOCITY' : 'PAPER';
 
   function actor(req) {
     return req.session && req.session.user ? req.session.user.username : null;
@@ -24,7 +25,7 @@ module.exports = function pluginRoutes(config, pm, activityLog) {
   router.get('/plugins/search', async (req, res) => {
     try {
       const q = req.query.q || '';
-      const url = `${HANGAR_API}/projects?limit=25&offset=0&sort=-stars${q ? '&query=' + encodeURIComponent(q) : ''}`;
+      const url = `${HANGAR_API}/projects?limit=25&offset=0&sort=-stars&platform=${hangarPlatform}${q ? '&query=' + encodeURIComponent(q) : ''}`;
       const r = await fetch(url);
       if (!r.ok) throw new Error('Hangar API returned ' + r.status);
       const data = await r.json();
@@ -55,9 +56,8 @@ module.exports = function pluginRoutes(config, pm, activityLog) {
       const latest = vdata.result && vdata.result[0];
       if (!latest) throw new Error('No published versions found for this plugin');
 
-      const platform = 'PAPER';
-      const download = latest.downloads && latest.downloads[platform];
-      if (!download || !download.downloadUrl) throw new Error('No Paper-compatible download found for this plugin');
+      const download = latest.downloads && latest.downloads[hangarPlatform];
+      if (!download || !download.downloadUrl) throw new Error(`No ${hangarPlatform}-compatible download found for this plugin`);
 
       const jarRes = await fetch(download.downloadUrl);
       if (!jarRes.ok) throw new Error('Download failed (' + jarRes.status + ')');

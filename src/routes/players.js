@@ -33,12 +33,34 @@ async function parseOnlineNames(pm) {
 module.exports = function playerRoutes(config, pm, activityLog) {
   const router = express.Router();
   const dir = config.server.directory;
+  const isVelocity = config.server.type === 'velocity';
 
   function actor(req) {
     return req.session && req.session.user ? req.session.user.username : null;
   }
 
+  function requirePaper(res) {
+    res.status(400).json({ error: 'Not available on Velocity — player ranks, whitelist, and bans live on your backend Paper servers, not the proxy.' });
+    return true;
+  }
+
   router.get('/players', async (req, res) => {
+    if (isVelocity) {
+      // Velocity has no ops.json/whitelist.json/banned-players.json of its
+      // own (those belong to the backend Paper servers), and its console
+      // command surface for player management isn't something we're
+      // confident enough about to reimplement here. Rather than guess at
+      // command syntax that might silently do the wrong thing, we just
+      // show whatever the proxy's own player-list command prints.
+      if (pm.state !== 'online') return res.json({ type: 'velocity', raw: null });
+      try {
+        const raw = await pm.sendCommand('glist all', { logAsUser: false });
+        return res.json({ type: 'velocity', raw });
+      } catch (err) {
+        return res.json({ type: 'velocity', raw: null, error: err.message });
+      }
+    }
+
     try {
       const online = await parseOnlineNames(pm);
       const ops = readJsonSafe(path.join(dir, 'ops.json'), []);
@@ -68,13 +90,14 @@ module.exports = function playerRoutes(config, pm, activityLog) {
       }));
 
       players.sort((a, b) => (b.online - a.online) || a.name.localeCompare(b.name));
-      res.json(players);
+      res.json({ type: 'paper', players });
     } catch (err) {
       res.status(500).json({ error: err.message });
     }
   });
 
   router.post('/players/:name/kick', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       const reason = req.body && req.body.reason ? ' ' + req.body.reason : '';
       await pm.sendCommand(`kick ${req.params.name}${reason}`);
@@ -84,6 +107,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/ban', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       const reason = req.body && req.body.reason ? ' ' + req.body.reason : '';
       await pm.sendCommand(`ban ${req.params.name}${reason}`);
@@ -93,6 +117,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/unban', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       await pm.sendCommand(`pardon ${req.params.name}`);
       activityLog.add('player', `${actor(req)} unbanned ${req.params.name}`, actor(req));
@@ -101,6 +126,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/op', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       await pm.sendCommand(`op ${req.params.name}`);
       activityLog.add('player', `${actor(req)} opped ${req.params.name}`, actor(req));
@@ -109,6 +135,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/deop', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       await pm.sendCommand(`deop ${req.params.name}`);
       activityLog.add('player', `${actor(req)} de-opped ${req.params.name}`, actor(req));
@@ -117,6 +144,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/whitelist', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       const add = req.body ? req.body.add !== false : true;
       await pm.sendCommand(`whitelist ${add ? 'add' : 'remove'} ${req.params.name}`);
@@ -126,6 +154,7 @@ module.exports = function playerRoutes(config, pm, activityLog) {
   });
 
   router.post('/players/:name/message', async (req, res) => {
+    if (isVelocity) return requirePaper(res);
     try {
       const msg = (req.body && req.body.message || '').trim();
       if (!msg) throw new Error('Empty message');

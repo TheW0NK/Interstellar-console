@@ -14,7 +14,13 @@ panel:
   sessionSecret: "CHANGE_ME_TO_A_RANDOM_STRING"
 
 server:
-  # Absolute path to the folder containing paper.jar, world folders, plugins/, etc.
+  # "paper" or "velocity". Changes: the stop command sent on Stop/Restart
+  # ("stop" vs "shutdown"), which config file the MC Configuration tab
+  # edits (server.properties vs velocity.toml), the Hangar platform used
+  # by the Plugin Installer, and whether Player Manager shows Paper-only
+  # actions (op/ban/whitelist — Velocity doesn't have these).
+  type: "paper"
+  # Absolute path to the folder containing paper.jar (or velocity.jar), etc.
   directory: "/path/to/your/server"
   jarFile: "paper.jar"
   javaBin: "java"
@@ -26,12 +32,14 @@ server:
   # Args applied after the jar file name
   extraArgs:
     - "nogui"
-
-rcon:
-  # Must match server.properties: enable-rcon=true, rcon.port, rcon.password
-  host: "127.0.0.1"
-  port: 25575
-  password: "CHANGE_ME"
+  # Path (relative to server.directory) where the optional Vexium Bridge
+  # companion plugin writes live TPS/MSPT/player stats. Paper-only — has
+  # no effect and isn't shown when server.type is "velocity". See /plugin
+  # in this repo for the plugin source and build instructions. If this
+  # file doesn't exist, the panel just shows "Not installed" on the TPS
+  # card — nothing else depends on it, and no console commands are ever
+  # sent for this.
+  bridgeStatsFile: "plugins/VexiumBridge/stats.json"
 
 sftp:
   # Purely informational — this panel does not manage SFTP/SSH itself.
@@ -43,7 +51,9 @@ sftp:
 
 backups:
   directory: "./data/backups"
-  # Paths relative to server.directory that get included in each backup
+  # Paths relative to server.directory that get included in each backup.
+  # For a Velocity proxy, you'd typically want something like:
+  #   ["velocity.toml", "forwarding.secret", "plugins"]
   include:
     - "world"
     - "world_nether"

@@ -6,3 +6,4 @@ data/activity.yml
 config/users.yml
 *.log
 .DS_Store
+plugin/target/

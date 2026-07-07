@@ -279,6 +279,24 @@ body{
 }
 
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;}
+.config-row{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:10px 4px;border-bottom:1px solid var(--border-soft);
+}
+.config-row:last-child{border-bottom:none;}
+.config-row-label{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1;}
+.config-row-key{font-family:var(--mono);font-size:12.3px;color:var(--text);word-break:break-all;}
+.config-row-section{font-size:10px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;}
+.config-row input{
+  background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
+  padding:7px 10px;color:var(--text);font-size:12.5px;font-family:var(--mono);outline:none;
+  width:220px;flex-shrink:0;
+}
+.config-section-divider{
+  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ember);
+  padding:14px 4px 6px 4px;
+}
+.config-section-divider:first-child{padding-top:4px;}
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:11.5px;color:var(--text-dim);font-weight:600;}
 .field input[type=text],.field input[type=number],.field select{
@@ -491,7 +509,7 @@ body{
     <div class="nav-item" data-tab="backups"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Backups</div>
     <div class="nav-item" data-tab="schedules"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Schedules</div>
     <div class="nav-item" data-tab="tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg>Quick Tasks</div>
-    <div class="nav-item" data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.56-1.04H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001.04-1.56V3a2 2 0 014 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.56 1.04H21a2 2 0 010 4h-.09A1.7 1.7 0 0019.4 15z"/></svg>MC Configuration</div>
+    <div class="nav-item" data-tab="config"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.34 1.87l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.7 1.7 0 00-1.87-.34 1.7 1.7 0 00-1.04 1.56V21a2 2 0 01-4 0v-.09A1.7 1.7 0 009 19.4a1.7 1.7 0 00-1.87.34l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-1.56-1.04H3a2 2 0 010-4h.09A1.7 1.7 0 004.6 9a1.7 1.7 0 00-.34-1.87l-.06-.06a2 2 0 112.83-2.83l.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001.04-1.56V3a2 2 0 014 0v.09A1.7 1.7 0 0015 4.6a1.7 1.7 0 001.87-.34l.06-.06a2 2 0 112.83 2.83l-.06.06A1.7 1.7 0 0019.4 9a1.7 1.7 0 001.56 1.04H21a2 2 0 010 4h-.09A1.7 1.7 0 0019.4 15z"/></svg><span id="navConfigLabel">MC Configuration</span></div>
     <div class="nav-item" data-tab="plugins-installed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 00-3 3v2H6a1 1 0 00-1 1v3H3a3 3 0 000 6h2v3a1 1 0 001 1h3v-2a3 3 0 016 0v2h3a1 1 0 001-1v-3h2a3 3 0 000-6h-2V8a1 1 0 00-1-1h-3V5a3 3 0 00-3-3z"/></svg>Installed Plugins</div>
     <div class="nav-item" data-tab="plugins-installer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/><circle cx="17.5" cy="17.5" r="3.5" fill="var(--surface-2)"/><path d="M17.5 16v3M16 17.5h3"/></svg>Plugin Installer</div>
     <div class="nav-item" data-tab="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M22 20c0-2.9-1.9-5.4-4.6-6.4"/></svg>Player Manager</div>
@@ -584,7 +602,7 @@ body{
 
     <div class="panel" id="tab-console">
       <div class="section-head">
-        <div><h2>Live Console</h2><p>Streaming from paper.jar, commands sent over RCON</p></div>
+        <div><h2>Live Console</h2><p>Streaming from paper.jar's stdout, commands sent to its stdin</p></div>
         <div style="display:flex;gap:8px;">
           <button class="btn btn-sm" id="autoscrollBtn">⏷ Autoscroll: On</button>
           <button class="btn btn-sm btn-ghost" id="clearConsoleBtn">Clear</button>
@@ -597,7 +615,7 @@ body{
         </div>
         <div class="console-log" id="consoleLog"></div>
         <div class="console-input-row">
-          <input type="text" id="cmdInput" placeholder="Type a server command and press Enter (sent via RCON)">
+          <input type="text" id="cmdInput" placeholder="Type a server command and press Enter (sent to the console)">
           <button class="btn btn-primary btn-sm" id="cmdSend">Send</button>
         </div>
       </div>
@@ -649,7 +667,7 @@ body{
     </div>
 
     <div class="panel" id="tab-config">
-      <div class="section-head"><div><h2>MC Configuration</h2><p>server.properties — restart or /reload required for some values</p></div></div>
+      <div class="section-head"><div><h2 id="configTabTitle">MC Configuration</h2><p id="configTabSub">server.properties — restart or /reload required for some values</p></div></div>
 
       <div class="card" style="margin-bottom:16px;">
         <div class="section-head" style="margin-bottom:12px;">
@@ -670,19 +688,12 @@ body{
       </div>
 
       <div class="card">
-        <div class="config-grid">
-          <div class="field"><label>MOTD</label><input type="text" id="cfgMotd" value=""></div>
-          <div class="field"><label>Max players</label><input type="number" id="cfgMaxPlayers" value=""></div>
-          <div class="field"><label>Difficulty</label><select id="cfgDifficulty"><option value="">—</option><option value="peaceful">Peaceful</option><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select></div>
-          <div class="field"><label>Default gamemode</label><select id="cfgGamemode"><option value="">—</option><option value="survival">Survival</option><option value="creative">Creative</option><option value="adventure">Adventure</option></select></div>
-          <div class="field"><label>View distance</label><input type="number" id="cfgViewDist" value=""></div>
-          <div class="field"><label>Simulation distance</label><input type="number" id="cfgSimDist" value=""></div>
-          <div class="field field-row-toggle"><span>PVP enabled</span><div class="toggle" data-cfg="pvp"></div></div>
-          <div class="field field-row-toggle"><span>Online mode</span><div class="toggle" data-cfg="onlineMode"></div></div>
-          <div class="field field-row-toggle"><span>Whitelist</span><div class="toggle" data-cfg="whitelist"></div></div>
-          <div class="field field-row-toggle"><span>Allow flight</span><div class="toggle" data-cfg="allowFlight"></div></div>
-          <div class="field field-row-toggle"><span>Command blocks</span><div class="toggle" data-cfg="commandBlocks"></div></div>
+        <div class="section-head" style="margin-bottom:12px;">
+          <div><h2 id="configFileTitle" style="font-size:13.5px;">server.properties</h2><p id="configFileNote" style="margin-top:2px;">Every key in the file — nothing curated or hidden</p></div>
         </div>
+        <input type="text" id="configSearch" placeholder="Search settings..." style="width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;padding:9px 12px;color:var(--text);font-size:12.8px;outline:none;margin-bottom:14px;">
+        <div id="configList" style="display:flex;flex-direction:column;gap:0;"></div>
+        <div class="note" id="configAdvancedNote" style="display:none;"></div>
         <div class="config-foot">
           <button class="btn btn-ghost" id="revertConfigBtn">Revert</button>
           <button class="btn btn-primary" id="saveConfigBtn">Save changes</button>
@@ -713,16 +724,24 @@ body{
 
     <div class="panel" id="tab-players">
       <div class="section-head">
-        <div><h2>Player Manager</h2><p>Online and previously-seen players</p></div>
+        <div><h2>Player Manager</h2><p id="playersSub">Online and previously-seen players</p></div>
       </div>
-      <div class="player-toolbar">
+      <div class="player-toolbar" id="playerToolbar">
         <input type="text" id="playerSearch" placeholder="Search players...">
       </div>
-      <div class="card" style="padding:0;">
+      <div class="card" id="playersPaperView" style="padding:0;">
         <table class="file-table">
           <thead><tr><th>Player</th><th>Rank</th><th>Status</th><th>Whitelisted</th><th></th></tr></thead>
           <tbody id="playerBody"></tbody>
         </table>
+      </div>
+      <div class="card" id="playersVelocityView" style="display:none;">
+        <div class="note" style="margin-bottom:14px;">
+          <b>Velocity doesn't expose per-player management the way Paper does.</b> Ranks, whitelist, and
+          bans live on your backend Paper servers — manage them there (or from this same panel if you
+          point another instance at that server's directory). This is the raw output of <code>glist all</code>.
+        </div>
+        <pre id="playersVelocityRaw" style="font-family:var(--mono);font-size:12.5px;white-space:pre-wrap;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border-soft);border-radius:8px;padding:14px;margin:0;">—</pre>
       </div>
     </div>
 
@@ -748,7 +767,13 @@ body{
           <div class="field"><label>Role</label>
             <select id="newAdminRole"><option value="admin">Admin</option><option value="moderator" selected>Moderator</option></select>
           </div>
-          <div class="field"><label>Temporary password</label><input type="text" id="newAdminPass" placeholder="auto-generated" readonly></div>
+          <div class="field">
+            <label>Password</label>
+            <div style="display:flex;gap:6px;">
+              <input type="text" id="newAdminPass" placeholder="Set a password or generate one">
+              <button class="btn btn-sm btn-ghost" id="regenAdminPassBtn" title="Generate a random password" style="flex-shrink:0;">⟳</button>
+            </div>
+          </div>
           <button class="btn btn-primary" id="addAdminBtn">+ Add</button>
         </div>
       </div>
@@ -790,7 +815,7 @@ body{
    VEXIUM PANEL — frontend
    Talks to the Node/Express backend in src/. Auth is a yaml-backed session
    cookie. Power controls spawn/kill the java process directly. Console
-   commands go over RCON. Everything below is wired to real endpoints —
+   commands go straight to its stdin. Everything below is wired to real endpoints —
    there are no simulated/seeded data paths left.
    ========================================================================== */
 
@@ -849,15 +874,19 @@ const loginCard = document.querySelector('.login-card');
 const loginUserInput = document.getElementById('loginUser');
 const loginPassInput = document.getElementById('loginPass');
 let currentRole = null;
+let serverType = 'paper';
 
-function applySession(user, role){
+function applySession(user, role, type){
   currentRole = role;
+  serverType = type === 'velocity' ? 'velocity' : 'paper';
   document.getElementById('sessionUser').textContent = user;
   document.getElementById('sessionRole').textContent = role;
   document.getElementById('sessionAvatar').textContent = user.slice(0,2).toUpperCase();
   const dashName = document.getElementById('dashUserName');
   if(dashName) dashName.textContent = user;
   document.querySelector('[data-tab="admins"]').style.display = (role==='owner'||role==='admin') ? '' : 'none';
+  document.getElementById('navConfigLabel').textContent = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
+  titles.config = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
 }
 
 async function attemptLogin(){
@@ -871,7 +900,7 @@ async function attemptLogin(){
     loginError.classList.remove('show');
     loginScreen.style.display = 'none';
     appShell.style.display = 'flex';
-    applySession(result.user, result.role);
+    applySession(result.user, result.role, result.serverType);
     toast('Welcome back, '+result.user);
     initLiveConnection();
     loadAllTabs();
@@ -906,7 +935,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
     const s = await api('/api/session');
     loginScreen.style.display = 'none';
     appShell.style.display = 'flex';
-    applySession(s.user, s.role);
+    applySession(s.user, s.role, s.serverType);
     initLiveConnection();
     loadAllTabs();
   } catch(e){}
@@ -917,7 +946,7 @@ const titles = {dashboard:'Dashboard',console:'Console',files:'File Manager',bac
 const tabLoaders = {
   dashboard: renderActivity, files: renderFiles, backups: renderBackups, schedules: renderSchedules,
   config: loadConfig, 'plugins-installed': renderInstalledPlugins,
-  players: renderPlayers, sftp: renderSftp, admins: renderAdmins,
+  players: renderPlayers, sftp: renderSftp, admins: renderAdmins, tasks: renderTaskGrid,
 };
 function switchTab(tab){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active', i.dataset.tab===tab));
@@ -1112,6 +1141,37 @@ function renderRes(){
 renderRes();
 window.addEventListener('resize', renderRes);
 
+function tpsColor(tps){ if(tps>=18) return 'var(--green)'; if(tps>=15) return 'var(--yellow)'; return 'var(--red)'; }
+function renderBridgeStats(bridge){
+  const tpsVal = document.getElementById('tpsVal');
+  const msptVal = document.getElementById('msptVal');
+  const playersVal = document.getElementById('playersVal');
+  const dashTps = document.getElementById('dashTps');
+  const dashMspt = document.getElementById('dashMspt');
+  const dashPlayers = document.getElementById('dashPlayers');
+
+  if(!bridge || !bridge.available){
+    const label = (bridge && bridge.stale) ? 'Stale' : 'Not installed';
+    if(tpsVal) tpsVal.textContent = '—';
+    if(msptVal) msptVal.textContent = '—';
+    if(dashTps){ dashTps.textContent = label; dashTps.style.color = ''; }
+    if(dashMspt) dashMspt.textContent = (bridge && bridge.stale)
+      ? 'Bridge plugin stopped reporting'
+      : 'Install the Vexium Bridge plugin to see this';
+    return;
+  }
+
+  const tps = bridge.tps, mspt = bridge.mspt;
+  if(tpsVal) tpsVal.textContent = tps.toFixed(1);
+  if(msptVal) msptVal.textContent = mspt.toFixed(1);
+  if(dashTps){ dashTps.textContent = tps.toFixed(1); dashTps.style.color = tpsColor(tps); }
+  if(dashMspt) dashMspt.textContent = 'MSPT: '+mspt.toFixed(1)+' ms';
+  if(bridge.playersOnline !== undefined){
+    if(playersVal) playersVal.textContent = bridge.playersOnline;
+    if(dashPlayers) dashPlayers.textContent = bridge.playersMax !== undefined ? `${bridge.playersOnline} / ${bridge.playersMax}` : bridge.playersOnline;
+  }
+}
+
 function applyStats(stats, uptimeMs){
   cpu = stats.cpuPct || 0;
   mem = stats.memMB ? stats.memMB/1024 : 0;
@@ -1123,49 +1183,15 @@ function applyStats(stats, uptimeMs){
   diskHist.shift(); diskHist.push(disk);
   renderRes();
 
-  // TPS/MSPT are read from RCON `/tps` output when online (see below).
+  // TPS/MSPT come from the optional Vexium Bridge plugin's stats file — see
+  // plugin/README.md. No console commands are sent for this.
+  renderBridgeStats(serverState==='online' ? stats.bridge : null);
+
   const h = Math.floor(uptimeMs/3600000), d = Math.floor(h/24);
   const uptimeStr = serverState==='online' ? (d>0 ? `${d}d ${h%24}h` : `${h}h ${Math.floor((uptimeMs%3600000)/60000)}m`) : '—';
   document.getElementById('uptimeVal').textContent = uptimeStr;
   const dashUptime = document.getElementById('dashUptime');
   if(dashUptime) dashUptime.textContent = uptimeStr;
-}
-
-let tpsPollTimer = null;
-function tpsColor(tps){ if(tps>=18) return 'var(--green)'; if(tps>=15) return 'var(--yellow)'; return 'var(--red)'; }
-function firstNumberAfterColon(text){
-  const idx = text.lastIndexOf(':');
-  const segment = idx === -1 ? text : text.slice(idx+1);
-  const nums = segment.match(/[\d.]+/g);
-  return nums && nums.length ? parseFloat(nums[0]) : null;
-}
-async function pollTps(){
-  if(serverState !== 'online'){ return; }
-  try{
-    const r = await api('/api/command', { method:'POST', body: JSON.stringify({ command: 'tps' }) });
-    const tps = firstNumberAfterColon(r.response||'');
-    if(tps !== null){
-      document.getElementById('tpsVal').textContent = tps.toFixed(1);
-      const dashTps = document.getElementById('dashTps');
-      if(dashTps){ dashTps.textContent = tps.toFixed(1); dashTps.style.color = tpsColor(tps); }
-    }
-  } catch(e){}
-  try{
-    // Output format varies by Paper version; grabbing the first figure (avg tick
-    // time over the shortest window) is a reasonable single-number summary.
-    const mr = await api('/api/command', { method:'POST', body: JSON.stringify({ command: 'mspt' }) });
-    const mspt = firstNumberAfterColon(mr.response||'');
-    if(mspt !== null){
-      document.getElementById('msptVal').textContent = mspt.toFixed(1);
-      const dashMspt = document.getElementById('dashMspt');
-      if(dashMspt) dashMspt.textContent = 'MSPT: '+mspt.toFixed(1)+' ms';
-    }
-  } catch(e){}
-  try{
-    const lr = await api('/api/command', { method:'POST', body: JSON.stringify({ command: 'list' }) });
-    const m = (lr.response||'').match(/(\d+) of a max/);
-    if(m) document.getElementById('playersVal').textContent = m[1];
-  } catch(e){}
 }
 
 /* ---------- CONSOLE ---------- */
@@ -1178,12 +1204,85 @@ function renderLogEntry(entry){
   const row = document.createElement('div');
   row.className='log-line';
   const lvl = entry.level || 'INFO';
-  row.innerHTML = `<span class="log-time">${timeStr(entry.time)}</span><span class="log-${lvl}">[${lvl}]</span> ${escapeHtml(entry.text)}`;
+  row.innerHTML = `<span class="log-time">${timeStr(entry.time)}</span><span class="log-${lvl}">[${lvl}]</span> ${consoleTextToHtml(entry.text)}`;
   logEl.appendChild(row);
   document.getElementById('lineCount').textContent = lineNum+' lines';
   if(autoscroll) logEl.scrollTop = logEl.scrollHeight;
 }
 function escapeHtml(s){ const div = document.createElement('div'); div.textContent = s; return div.innerHTML; }
+
+/* ---------- CONSOLE COLOR FORMATTING ---------- */
+// Handles both real ANSI escape codes (what Paper/Velocity write to stdout
+// via their TerminalConsoleAppender) and raw Minecraft §-formatting codes
+// (occasionally printed as-is by plugins that bypass that appender).
+const MC_COLOR_HEX = {
+  '0':'#000000','1':'#0000AA','2':'#00AA00','3':'#00AAAA','4':'#AA0000','5':'#AA00AA','6':'#FFAA00','7':'#AAAAAA',
+  '8':'#555555','9':'#5555FF','a':'#55FF55','b':'#55FFFF','c':'#FF5555','d':'#FF55FF','e':'#FFFF55','f':'#FFFFFF'
+};
+const ANSI_COLOR_HEX = {
+  30:'#3b3b3b', 31:'#c0392b', 32:'#27ae60', 33:'#c9a227', 34:'#2980b9', 35:'#8e44ad', 36:'#16a085', 37:'#bdbdbd',
+  90:'#6b6b6b', 91:'#ff5c5c', 92:'#5fbf9f', 93:'#e3b341', 94:'#5b9dd9', 95:'#c77dff', 96:'#4fd1d9', 97:'#ffffff'
+};
+const CONSOLE_TOKEN_RE = /\x1b\[([0-9;]*)m|\u00a7([0-9a-fk-orA-FK-OR])/g;
+
+function consoleTextToHtml(raw){
+  let out = '';
+  let lastIndex = 0;
+  let color = null, bold = false, underline = false, italic = false, strike = false;
+  let spanOpen = false;
+
+  function closeSpan(){ if(spanOpen){ out += '</span>'; spanOpen = false; } }
+  function flush(chunk){
+    if(!chunk) return;
+    closeSpan();
+    if(color || bold || underline || italic || strike){
+      const styles = [];
+      if(color) styles.push('color:'+color);
+      if(bold) styles.push('font-weight:700');
+      if(underline) styles.push('text-decoration:underline');
+      if(italic) styles.push('font-style:italic');
+      if(strike) styles.push('text-decoration:line-through');
+      out += `<span style="${styles.join(';')}">`;
+      spanOpen = true;
+    }
+    out += escapeHtml(chunk);
+  }
+  function applyAnsiCode(code){
+    if(code===0){ color=null; bold=false; underline=false; italic=false; strike=false; }
+    else if(code===1) bold=true;
+    else if(code===3) italic=true;
+    else if(code===4) underline=true;
+    else if(code===9) strike=true;
+    else if(code===39) color=null;
+    else if(ANSI_COLOR_HEX[code]) color=ANSI_COLOR_HEX[code];
+  }
+  function applyMcCode(ch){
+    const c = ch.toLowerCase();
+    if(c==='r'){ color=null; bold=false; underline=false; italic=false; strike=false; }
+    else if(c==='l') bold=true;
+    else if(c==='n') underline=true;
+    else if(c==='o') italic=true;
+    else if(c==='m') strike=true;
+    else if(c==='k'){ /* obfuscated — no sane static rendering, ignore */ }
+    else if(MC_COLOR_HEX[c]) color=MC_COLOR_HEX[c];
+  }
+
+  let m;
+  while((m = CONSOLE_TOKEN_RE.exec(raw))){
+    flush(raw.slice(lastIndex, m.index));
+    if(m[1] !== undefined){
+      const codes = m[1].split(';').filter(Boolean).map(Number);
+      (codes.length ? codes : [0]).forEach(applyAnsiCode);
+    } else {
+      applyMcCode(m[2]);
+    }
+    lastIndex = CONSOLE_TOKEN_RE.lastIndex;
+  }
+  flush(raw.slice(lastIndex));
+  closeSpan();
+  return out;
+}
+
 document.getElementById('autoscrollBtn').addEventListener('click',function(){
   autoscroll = !autoscroll;
   this.textContent = '⏷ Autoscroll: '+(autoscroll?'On':'Off');
@@ -1223,7 +1322,6 @@ function initLiveConnection(){
   liveSocket.addEventListener('error', ()=>{});
   api('/api/status').then(s=>applyState(s.state)).catch(()=>{});
   api('/api/stats').then(s=>applyStats(s, 0)).catch(()=>{});
-  if(!tpsPollTimer) tpsPollTimer = setInterval(pollTps, 4000);
 }
 
 /* ---------- FILES ---------- */
@@ -1431,26 +1529,37 @@ document.getElementById('addScheduleBtn').addEventListener('click', async ()=>{
 const tasks = [
   {t:'Restart Server',d:'Graceful restart with player warning',icon:'M13 2L4 14h6l-1 8 9-12h-6z',danger:false,action:doRestart},
   {t:'Stop Server',d:'Shuts the server down completely',icon:'M6 4h4v16H6zM14 4h4v16h-4z',danger:true,action:doStop},
-  {t:'Save All',d:'Force-flush the world to disk',icon:'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM7 3v6h8V3M7 15h6',danger:false,action:()=>runCommand('save-all','World save triggered')},
-  {t:'Reload Plugins',d:'Soft-reload without a full restart',icon:'M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-5M20 14a8 8 0 01-14 5',danger:false,action:()=>runCommand('reload confirm','Reload issued (Paper discourages this — a restart is safer)')},
-  {t:'Toggle Whitelist',d:'Turn whitelist mode on or off',icon:'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V7z',danger:false,action:()=>{ const on = confirm('OK = turn whitelist ON, Cancel = turn it OFF'); runCommand('whitelist '+(on?'on':'off'), 'Whitelist turned '+(on?'on':'off')); }},
-  {t:'Op / Deop Player',d:'Grant or revoke operator status',icon:'M12 2l2.6 5.9L21 9l-4.5 4.4L17.6 20 12 16.8 6.4 20l1.1-6.6L3 9l6.4-1.1z',danger:false,action:()=>{ const name = prompt('Player name to toggle op status for:'); if(!name) return; const deop = confirm('OK = OP this player, Cancel = DEOP this player'); runCommand((deop?'op ':'deop ')+name, (deop?'Opped ':'De-opped ')+name); }},
-  {t:'Save-Off / Save-On',d:'Pause world autosave (for safe file copies)',icon:'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',danger:false,action:()=>{ const off = confirm('OK = save-off, Cancel = save-on'); runCommand(off?'save-off':'save-on', off?'Autosave paused':'Autosave resumed'); }},
+  {t:'Save All',d:'Force-flush the world to disk',icon:'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM7 3v6h8V3M7 15h6',danger:false,paperOnly:true,action:()=>runCommand('save-all','World save triggered')},
+  {t:'Reload Plugins',d:'Soft-reload without a full restart',icon:'M4 4v6h6M20 20v-6h-6M4 10a8 8 0 0114-5M20 14a8 8 0 01-14 5',danger:false,paperOnly:true,action:()=>runCommand('reload confirm','Reload issued (Paper discourages this — a restart is safer)')},
+  {t:'Toggle Whitelist',d:'Turn whitelist mode on or off',icon:'M9 12l2 2 4-4M12 3l8 4v5c0 5-3.4 8.7-8 10-4.6-1.3-8-5-8-10V7z',danger:false,paperOnly:true,action:()=>{ const on = confirm('OK = turn whitelist ON, Cancel = turn it OFF'); runCommand('whitelist '+(on?'on':'off'), 'Whitelist turned '+(on?'on':'off')); }},
+  {t:'Op / Deop Player',d:'Grant or revoke operator status',icon:'M12 2l2.6 5.9L21 9l-4.5 4.4L17.6 20 12 16.8 6.4 20l1.1-6.6L3 9l6.4-1.1z',danger:false,paperOnly:true,action:()=>{ const name = prompt('Player name to toggle op status for:'); if(!name) return; const deop = confirm('OK = OP this player, Cancel = DEOP this player'); runCommand((deop?'op ':'deop ')+name, (deop?'Opped ':'De-opped ')+name); }},
+  {t:'Save-Off / Save-On',d:'Pause world autosave (for safe file copies)',icon:'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',danger:false,paperOnly:true,action:()=>{ const off = confirm('OK = save-off, Cancel = save-on'); runCommand(off?'save-off':'save-on', off?'Autosave paused':'Autosave resumed'); }},
 ];
 async function runCommand(cmd, successMsg){
   if(serverState!=='online'){ toast('Server is offline — nothing to send that to.'); return; }
   try{ await api('/api/command', { method:'POST', body: JSON.stringify({ command: cmd }) }); toast(successMsg); }
   catch(err){ toast('Failed: '+err.message); }
 }
-const grid = document.getElementById('taskGrid');
-tasks.forEach(tk=>{
-  const el = document.createElement('div');
-  el.className='task-tile'+(tk.danger?' danger':'');
-  el.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="${tk.icon}"/></svg>
-    <div class="tt">${tk.t}</div><div class="td">${tk.d}</div>`;
-  el.addEventListener('click',()=> tk.action ? tk.action() : toast(tk.msg));
-  grid.appendChild(el);
-});
+function renderTaskGrid(){
+  const grid = document.getElementById('taskGrid');
+  grid.innerHTML = '';
+  const visible = tasks.filter(tk => !tk.paperOnly || serverType !== 'velocity');
+  visible.forEach(tk=>{
+    const el = document.createElement('div');
+    el.className='task-tile'+(tk.danger?' danger':'');
+    el.innerHTML = `<svg class="ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="${tk.icon}"/></svg>
+      <div class="tt">${tk.t}</div><div class="td">${tk.d}</div>`;
+    el.addEventListener('click',()=> tk.action ? tk.action() : toast(tk.msg));
+    grid.appendChild(el);
+  });
+  if(serverType === 'velocity'){
+    const note = document.createElement('div');
+    note.className = 'empty-state';
+    note.style.gridColumn = '1/-1';
+    note.textContent = "Some Paper-only tasks are hidden for Velocity — use the Console tab for proxy-specific commands.";
+    grid.appendChild(note);
+  }
+}
 document.getElementById('broadcastBtn').addEventListener('click',()=>{
   const inp = document.getElementById('broadcastInput');
   const msg = inp.value.trim();
@@ -1460,35 +1569,77 @@ document.getElementById('broadcastBtn').addEventListener('click',()=>{
 });
 
 /* ---------- MC CONFIGURATION ---------- */
-let cfgOriginal = {};
+let cfgEntries = []; // [{section, key, value, type}]
+function cfgFullKey(e){ return e.section ? e.section+'.'+e.key : e.key; }
+function escapeAttr(s){ return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderConfigList(filter){
+  const list = document.getElementById('configList');
+  const q = (filter||'').toLowerCase();
+  list.innerHTML = '';
+  let lastSection = undefined;
+  let shown = 0;
+  cfgEntries.forEach((e)=>{
+    const fullKey = cfgFullKey(e);
+    if(q && !fullKey.toLowerCase().includes(q) && !e.value.toLowerCase().includes(q)) return;
+    shown++;
+    if(e.section !== lastSection){
+      lastSection = e.section;
+      if(e.section){
+        const div = document.createElement('div');
+        div.className = 'config-section-divider';
+        div.textContent = '[' + e.section + ']';
+        list.appendChild(div);
+      }
+    }
+    const row = document.createElement('div');
+    row.className = 'config-row';
+    if(e.type === 'bool'){
+      row.innerHTML = `<div class="config-row-label"><span class="config-row-key">${e.key}</span></div>
+        <div class="toggle ${e.value==='true'?'on':''}" data-fullkey="${fullKey}"></div>`;
+      row.querySelector('.toggle').addEventListener('click', function(){ this.classList.toggle('on'); });
+    } else {
+      const inputType = e.type === 'number' ? 'number' : (/password/i.test(e.key) ? 'password' : 'text');
+      row.innerHTML = `<div class="config-row-label"><span class="config-row-key">${e.key}</span></div>
+        <input type="${inputType}" data-fullkey="${fullKey}" value="${escapeAttr(e.value)}">`;
+    }
+    list.appendChild(row);
+  });
+  if(shown===0){
+    list.innerHTML = '<div class="empty-state">No settings match your search.</div>';
+  }
+}
+
 async function loadConfig(){
   try{
     const c = await api('/api/config');
-    cfgOriginal = c;
-    document.getElementById('cfgMotd').value = c.motd ?? '';
-    document.getElementById('cfgMaxPlayers').value = c.maxPlayers ?? '';
-    document.getElementById('cfgDifficulty').value = (c.difficulty||'').toLowerCase();
-    document.getElementById('cfgGamemode').value = (c.gamemode||'').toLowerCase();
-    document.getElementById('cfgViewDist').value = c.viewDistance ?? '';
-    document.getElementById('cfgSimDist').value = c.simulationDistance ?? '';
-    document.querySelectorAll('[data-cfg]').forEach(t=>{
-      const key = t.dataset.cfg;
-      t.classList.toggle('on', String(c[key]).toLowerCase()==='true');
-    });
+    cfgEntries = c.entries;
+    const isVelocity = c.type === 'velocity';
+    document.getElementById('configTabTitle').textContent = isVelocity ? 'Proxy Configuration' : 'MC Configuration';
+    document.getElementById('configTabSub').textContent = isVelocity
+      ? 'velocity.toml — restart required for most values'
+      : 'server.properties — restart or /reload required for some values';
+    document.getElementById('configFileTitle').textContent = c.fileName;
+    document.getElementById('configFileNote').textContent = 'Every editable key in the file — nothing curated or hidden';
+    const advNote = document.getElementById('configAdvancedNote');
+    if(isVelocity){
+      advNote.style.display = '';
+      advNote.innerHTML = '<b>Note:</b> Array/table values (like <code>servers.try</code>) aren\'t shown here — edit those directly via the File Manager.';
+    } else {
+      advNote.style.display = 'none';
+    }
+    renderConfigList(document.getElementById('configSearch').value);
   } catch(err){ toast('Could not load config: '+err.message); }
 }
-document.querySelectorAll('[data-cfg]').forEach(t=>t.addEventListener('click',()=>t.classList.toggle('on')));
+document.getElementById('configSearch').addEventListener('input', (e)=> renderConfigList(e.target.value));
 document.getElementById('saveConfigBtn').addEventListener('click', async ()=>{
-  const body = {
-    motd: document.getElementById('cfgMotd').value,
-    maxPlayers: document.getElementById('cfgMaxPlayers').value,
-    difficulty: document.getElementById('cfgDifficulty').value || null,
-    gamemode: document.getElementById('cfgGamemode').value || null,
-    viewDistance: document.getElementById('cfgViewDist').value,
-    simulationDistance: document.getElementById('cfgSimDist').value,
-  };
-  document.querySelectorAll('[data-cfg]').forEach(t=>{ body[t.dataset.cfg] = t.classList.contains('on'); });
-  try{ const r = await api('/api/config', {method:'PUT', body: JSON.stringify(body)}); toast(r.note || 'Saved'); }
+  const updates = {};
+  document.querySelectorAll('#configList [data-fullkey]').forEach((el)=>{
+    const fullKey = el.dataset.fullkey;
+    if(el.classList.contains('toggle')){ updates[fullKey] = el.classList.contains('on') ? 'true' : 'false'; }
+    else { updates[fullKey] = el.value; }
+  });
+  try{ const r = await api('/api/config', {method:'PUT', body: JSON.stringify({updates})}); toast(r.note || 'Saved'); loadConfig(); }
   catch(err){ toast('Save failed: '+err.message); }
 });
 document.getElementById('revertConfigBtn').addEventListener('click', loadConfig);
@@ -1577,39 +1728,62 @@ async function searchPlugins(q){
 
 /* ---------- PLAYERS ---------- */
 async function renderPlayers(){
+  const paperView = document.getElementById('playersPaperView');
+  const velocityView = document.getElementById('playersVelocityView');
+  const toolbar = document.getElementById('playerToolbar');
+  const sub = document.getElementById('playersSub');
+
+  let resp;
+  try{ resp = await api('/api/players'); }
+  catch(err){ toast('Could not load players: '+err.message); return; }
+
+  if(resp.type === 'velocity'){
+    paperView.style.display = 'none';
+    toolbar.style.display = 'none';
+    velocityView.style.display = '';
+    sub.textContent = 'Velocity proxy — raw player list';
+    document.getElementById('playersVelocityRaw').textContent =
+      resp.raw !== null && resp.raw !== undefined && resp.raw !== ''
+        ? resp.raw
+        : (resp.error ? ('Error: '+resp.error) : 'Server is offline, or glist returned nothing.');
+    return;
+  }
+
+  paperView.style.display = '';
+  toolbar.style.display = '';
+  velocityView.style.display = 'none';
+  sub.textContent = 'Online and previously-seen players';
+
   const body = document.getElementById('playerBody');
-  body.innerHTML = `<tr><td colspan="5" style="color:var(--text-faint);padding:22px 10px;text-align:center;">Loading...</td></tr>`;
-  try{
-    const players = await api('/api/players');
-    if(players.length===0){ body.innerHTML = `<tr><td colspan="5" style="color:var(--text-faint);padding:22px 10px;text-align:center;">No player data yet.</td></tr>`; return; }
-    body.innerHTML = '';
-    players.forEach(p=>{
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><div class="file-name"><div class="avatar">${p.name.slice(0,2).toUpperCase()}</div>${p.name}</div></td>
-        <td class="rank-${p.rank}">${p.rank}</td>
-        <td><span class="badge ${p.online?'on':'off'}">${p.online?'ONLINE':'OFFLINE'}</span></td>
-        <td>${p.whitelisted?'Yes':'No'}</td>
-        <td style="text-align:right;">
-          ${p.online ? '<button class="btn btn-sm btn-ghost" data-act="kick">Kick</button>' : ''}
-          <button class="btn btn-sm btn-ghost" data-act="op">${p.rank==='member'?'Op':'Deop'}</button>
-          <button class="btn btn-sm btn-danger" data-act="ban">${p.banned?'Unban':'Ban'}</button>
-        </td>`;
-      tr.querySelector('[data-act="op"]')?.addEventListener('click', async ()=>{
-        try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.rank==='member'?'/op':'/deop'), {method:'POST'}); renderPlayers(); }
-        catch(err){ toast('Failed: '+err.message); }
-      });
-      tr.querySelector('[data-act="kick"]')?.addEventListener('click', async ()=>{
-        try{ await api('/api/players/'+encodeURIComponent(p.name)+'/kick', {method:'POST', body: JSON.stringify({})}); toast('Kicked '+p.name); renderPlayers(); }
-        catch(err){ toast('Failed: '+err.message); }
-      });
-      tr.querySelector('[data-act="ban"]')?.addEventListener('click', async ()=>{
-        try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.banned?'/unban':'/ban'), {method:'POST', body: JSON.stringify({})}); toast((p.banned?'Unbanned ':'Banned ')+p.name); renderPlayers(); }
-        catch(err){ toast('Failed: '+err.message); }
-      });
-      body.appendChild(tr);
+  const players = resp.players || [];
+  if(players.length===0){ body.innerHTML = `<tr><td colspan="5" style="color:var(--text-faint);padding:22px 10px;text-align:center;">No player data yet.</td></tr>`; return; }
+  body.innerHTML = '';
+  players.forEach(p=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><div class="file-name"><div class="avatar">${p.name.slice(0,2).toUpperCase()}</div>${p.name}</div></td>
+      <td class="rank-${p.rank}">${p.rank}</td>
+      <td><span class="badge ${p.online?'on':'off'}">${p.online?'ONLINE':'OFFLINE'}</span></td>
+      <td>${p.whitelisted?'Yes':'No'}</td>
+      <td style="text-align:right;">
+        ${p.online ? '<button class="btn btn-sm btn-ghost" data-act="kick">Kick</button>' : ''}
+        <button class="btn btn-sm btn-ghost" data-act="op">${p.rank==='member'?'Op':'Deop'}</button>
+        <button class="btn btn-sm btn-danger" data-act="ban">${p.banned?'Unban':'Ban'}</button>
+      </td>`;
+    tr.querySelector('[data-act="op"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.rank==='member'?'/op':'/deop'), {method:'POST'}); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
     });
-  } catch(err){ body.innerHTML = `<tr><td colspan="5" style="color:var(--red);padding:22px 10px;text-align:center;">${err.message}</td></tr>`; }
+    tr.querySelector('[data-act="kick"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+'/kick', {method:'POST', body: JSON.stringify({})}); toast('Kicked '+p.name); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
+    });
+    tr.querySelector('[data-act="ban"]')?.addEventListener('click', async ()=>{
+      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.banned?'/unban':'/ban'), {method:'POST', body: JSON.stringify({})}); toast((p.banned?'Unbanned ':'Banned ')+p.name); renderPlayers(); }
+      catch(err){ toast('Failed: '+err.message); }
+    });
+    body.appendChild(tr);
+  });
 }
 document.getElementById('playerSearch').addEventListener('input', (e)=>{
   const q = e.target.value.toLowerCase();
@@ -1646,8 +1820,8 @@ function genPassword(){
   return out;
 }
 document.getElementById('newAdminPass').value = genPassword();
-document.getElementById('newAdminUser').addEventListener('focus',()=>{
-  if(!document.getElementById('newAdminPass').value) document.getElementById('newAdminPass').value = genPassword();
+document.getElementById('regenAdminPassBtn').addEventListener('click', ()=>{
+  document.getElementById('newAdminPass').value = genPassword();
 });
 async function renderAdmins(){
   const list = document.getElementById('adminList');
@@ -1664,7 +1838,20 @@ async function renderAdmins(){
           <div class="avatar">${a.username.slice(0,2).toUpperCase()}</div>
           <div><div class="row-title">${a.username}</div><div class="row-sub"><span class="role-badge role-${a.role}">${a.role}</span></div></div>
         </div>
-        <div class="row-actions"><button class="btn btn-sm btn-danger" data-act="remove">Remove</button></div>`;
+        <div class="row-actions">
+          <button class="btn btn-sm" data-act="reset">Reset Password</button>
+          <button class="btn btn-sm btn-danger" data-act="remove">Remove</button>
+        </div>`;
+      row.querySelector('[data-act="reset"]').addEventListener('click', async ()=>{
+        const newPass = prompt(`New password for "${a.username}" (leave blank to auto-generate):`, '');
+        if(newPass === null) return; // cancelled
+        const password = newPass.trim() || genPassword();
+        if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
+        try{
+          await api('/api/admins/'+encodeURIComponent(a.username), {method:'PATCH', body: JSON.stringify({password})});
+          toast(`Password for ${a.username} reset to: ${password}`);
+        } catch(err){ toast('Failed: '+err.message); }
+      });
       row.querySelector('[data-act="remove"]').addEventListener('click', async ()=>{
         if(!confirm('Remove administrator "'+a.username+'"?')) return;
         try{ await api('/api/admins/'+encodeURIComponent(a.username), {method:'DELETE'}); renderAdmins(); toast('Removed'); }
@@ -1677,11 +1864,12 @@ async function renderAdmins(){
 document.getElementById('addAdminBtn').addEventListener('click', async ()=>{
   const username = document.getElementById('newAdminUser').value.trim();
   const role = document.getElementById('newAdminRole').value;
-  const password = document.getElementById('newAdminPass').value || genPassword();
+  const password = document.getElementById('newAdminPass').value.trim() || genPassword();
   if(!username){ toast('Enter a username'); return; }
+  if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
   try{
     await api('/api/admins', {method:'POST', body: JSON.stringify({username, password, role})});
-    toast(`Added ${username}. Temporary password: ${password}`);
+    toast(`Added ${username}. Password: ${password}`);
     document.getElementById('newAdminUser').value = '';
     document.getElementById('newAdminPass').value = genPassword();
     renderAdmins();

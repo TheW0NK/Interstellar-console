@@ -52,7 +52,7 @@ app.post('/api/login', (req, res) => {
   if (!user) return res.status(401).json({ error: 'Incorrect username or password.' });
   req.session.user = user;
   activityLog.add('auth', `${user.username} signed in`, user.username);
-  res.json({ ok: true, user: user.username, role: user.role });
+  res.json({ ok: true, user: user.username, role: user.role, serverType: config.server.type || 'paper' });
 });
 
 app.post('/api/logout', (req, res) => {
@@ -60,7 +60,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/session', requireAuth, (req, res) => {
-  res.json({ user: req.session.user.username, role: req.session.user.role });
+  res.json({ user: req.session.user.username, role: req.session.user.role, serverType: config.server.type || 'paper' });
 });
 
 /* ---------- branding (public GETs, protected PUT handled inside the router) ---------- */

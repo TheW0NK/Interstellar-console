@@ -16,6 +16,7 @@ module.exports = function adminRoutes(userStore, activityLog) {
     try {
       const { username, password, role } = req.body || {};
       if (!username || !password || !role) throw new Error('username, password, and role are required');
+      if (password.length < 8) throw new Error('Password must be at least 8 characters');
       if (!['owner', 'admin', 'moderator'].includes(role)) throw new Error('Invalid role');
       const user = userStore.add({ username, password, role });
       activityLog.add('admin', `${actor(req)} added administrator "${username}" (${role})`, actor(req));
@@ -32,6 +33,7 @@ module.exports = function adminRoutes(userStore, activityLog) {
         activityLog.add('admin', `${actor(req)} changed ${req.params.username}'s role to ${req.body.role}`, actor(req));
       }
       if (req.body.password) {
+        if (req.body.password.length < 8) throw new Error('Password must be at least 8 characters');
         userStore.resetPassword(req.params.username, req.body.password);
         activityLog.add('admin', `${actor(req)} reset ${req.params.username}'s password`, actor(req));
       }
