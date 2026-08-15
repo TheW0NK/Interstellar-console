@@ -1,0 +1,21 @@
+# =============================================================================
+# Interstellar Console — GUS (Global User System) settings
+# =============================================================================
+# GUS is Prismonian's central identity provider. It's ON by default and
+# meant to stay on — Administrator Management's "Disable GUS" control is
+# deliberately hard to use (owner-only, requires re-entering your own
+# password, requires typing an exact confirmation phrase, requires a
+# written reason that goes to the activity log) because GUS is
+# meaningfully more secure than this panel's own local accounts:
+# centrally managed password policy, cross-app session revocation,
+# (username, ip)-scoped lockout, per-app-scoped tokens.
+#
+# appId/appSecret come from running GUS's own bootstrap command against
+# your GUS instance — see gus/README.md ("The app-facing contract"). They
+# identify *this panel* to GUS, not any individual user.
+# =============================================================================
+
+enabled: true
+baseUrl: "http://127.0.0.1:4000"
+appId: "CHANGE_ME"
+appSecret: "CHANGE_ME"

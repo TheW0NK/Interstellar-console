@@ -1,0 +1,63 @@
+# =============================================================================
+# Interstellar Console — servers
+# =============================================================================
+# One entry per server or proxy this panel manages. `id` becomes part of
+# the URL (/api/servers/<id>/...) so keep it short, unique, and stick to
+# letters/numbers/hyphens/underscores.
+#
+# With exactly one entry, the panel skips the server picker on login and
+# takes you straight to that server's dashboard — same experience as
+# before multi-server support existed. With more than one, you get a
+# picker after login.
+#
+# Backups and schedules are automatically namespaced per server under
+# data/backups/<id>/ and data/schedules/<id>.json — not configured here.
+# =============================================================================
+
+servers:
+  - id: "main"
+    name: "Main Server"
+    # "paper" or "velocity". Changes: the stop command sent on Stop/Restart
+    # ("stop" vs "shutdown"), which config file the MC Configuration tab
+    # edits (server.properties vs velocity.toml), the Hangar platform used
+    # by the Plugin Installer, and whether Player Manager shows Paper-only
+    # actions (op/ban/whitelist — Velocity doesn't have these).
+    type: "paper"
+    # Absolute path to the folder containing paper.jar (or velocity.jar), etc.
+    directory: "/path/to/your/server"
+    jarFile: "paper.jar"
+    javaBin: "java"
+    javaArgs:
+      - "-Xms4G"
+      - "-Xmx8G"
+      - "-XX:+UseG1GC"
+    extraArgs:
+      - "nogui"
+    # Path (relative to this server's directory) where the optional Vexium
+    # Bridge companion plugin writes live TPS/MSPT/player stats. Paper-only.
+    bridgeStatsFile: "plugins/VexiumBridge/stats.json"
+    sftp:
+      host: "your.server.hostname"
+      port: 22
+      username: "your-username"
+    backups:
+      # Paths relative to this server's directory that get included in
+      # each backup. For a Velocity proxy, you'd typically want something
+      # like ["velocity.toml", "forwarding.secret", "plugins"].
+      include:
+        - "world"
+        - "world_nether"
+        - "world_the_end"
+        - "plugins"
+
+  # Add more servers by copying the block above, e.g.:
+  # - id: "lobby"
+  #   name: "Lobby (Velocity)"
+  #   type: "velocity"
+  #   directory: "/path/to/your/velocity"
+  #   jarFile: "velocity.jar"
+  #   javaBin: "java"
+  #   javaArgs: ["-Xms1G", "-Xmx1G"]
+  #   extraArgs: []
+  #   sftp: {host: "your.server.hostname", port: 22, username: "your-username"}
+  #   backups: {include: ["velocity.toml", "forwarding.secret", "plugins"]}

@@ -1,9 +1,13 @@
 node_modules/
 data/backups/*
 !data/backups/.gitkeep
+data/avatars/*
+!data/avatars/.gitkeep
 data/schedules.json
 data/activity.yml
+data/failed-logins.yml
 config/users.yml
+config/gus-users.yml
 *.log
 .DS_Store
 plugin/target/

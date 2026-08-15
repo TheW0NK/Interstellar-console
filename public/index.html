@@ -27,6 +27,31 @@
   --mono:'JetBrains Mono',monospace;
   --sans:'Inter',sans-serif;
 }
+/* Alternate themes — each one restyles the full palette (surfaces, borders,
+   text, accent, AND status colors), not just the accent, via a data-theme
+   attribute on <html>. Every themed element in this file reads from these
+   variables already, so nothing else needs to change per-theme. */
+[data-theme="ocean"]{
+  --bg:#071019; --surface:#0E1B27; --surface-2:#142735; --surface-3:#1B3444;
+  --border:#254658; --border-soft:#1D3948;
+  --text:#E6F1F8; --text-dim:#8FB0C4; --text-faint:#5A7C90;
+  --ember:#4FB3E8; --ember-dim:#265D7D;
+  --green:#4FD6B0; --red:#FF6B6B; --yellow:#F2C14E; --blue:#4FB3E8;
+}
+[data-theme="forest"]{
+  --bg:#0A120D; --surface:#101A13; --surface-2:#16241A; --surface-3:#1D3024;
+  --border:#274535; --border-soft:#1F3728;
+  --text:#E6F2E7; --text-dim:#8FBD9D; --text-faint:#5A8A6B;
+  --ember:#5FD98A; --ember-dim:#2E6B47;
+  --green:#5FD98A; --red:#FF6B5C; --yellow:#E0C14E; --blue:#5FA8D9;
+}
+[data-theme="light"]{
+  --bg:#F4F5F7; --surface:#FFFFFF; --surface-2:#F0F1F4; --surface-3:#E6E8EC;
+  --border:#DADDE3; --border-soft:#E9EBEF;
+  --text:#1A1D23; --text-dim:#5C6370; --text-faint:#9198A3;
+  --ember:#D9731A; --ember-dim:#F0C6A0;
+  --green:#1E9E6D; --red:#D93A3A; --yellow:#C89A1E; --blue:#2E7BC4;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{
@@ -62,7 +87,7 @@ body{
 }
 .brand-mark{
   width:30px;height:30px;border-radius:7px;
-  background:linear-gradient(150deg,var(--ember),#C4581C);
+  background:linear-gradient(150deg,var(--ember),var(--ember-dim));
   display:flex;align-items:center;justify-content:center;
   font-family:var(--mono);font-weight:700;font-size:14px;color:#0B0E11;
   flex-shrink:0;
@@ -238,6 +263,10 @@ body{
   background:var(--surface-2);border:1px solid var(--border-soft);border-radius:9px;
   padding:12px 16px;
 }
+.server-pick-row{
+  cursor:pointer;transition:border-color .12s, background .12s;
+}
+.server-pick-row:hover{border-color:var(--ember-dim);background:var(--surface-3);}
 .row-left{display:flex;align-items:center;gap:12px;}
 .row-icon{
   width:34px;height:34px;border-radius:8px;background:var(--surface-3);
@@ -308,6 +337,36 @@ body{
   display:flex;align-items:center;justify-content:space-between;
   background:var(--surface-2);border:1px solid var(--border-soft);border-radius:7px;padding:10px 12px;
 }
+
+/* ===== MY ACCOUNT ===== */
+.acct-hero{display:flex;align-items:center;gap:20px;padding:20px 22px;}
+.acct-hero-avatar-wrap{position:relative;flex-shrink:0;}
+.acct-hero-avatar{width:84px;height:84px;font-size:26px;border-radius:18px;}
+.acct-avatar-edit-btn{
+  position:absolute;bottom:-4px;right:-4px;width:28px;height:28px;border-radius:50%;
+  background:var(--ember);color:#0B0E11;display:flex;align-items:center;justify-content:center;
+  border:3px solid var(--surface);cursor:pointer;transition:filter .1s;
+}
+.acct-avatar-edit-btn:hover{filter:brightness(1.15);}
+.acct-avatar-edit-btn svg{width:14px;height:14px;}
+.acct-hero-info{display:flex;flex-direction:column;gap:4px;}
+.acct-hero-name-row{display:flex;align-items:center;gap:10px;}
+.acct-hero-username{font-size:19px;font-weight:700;letter-spacing:.2px;}
+.acct-card-title{font-size:12.8px;font-weight:600;margin-bottom:14px;color:var(--text);}
+.acct-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 18px;}
+@media (max-width:640px){.acct-form-grid{grid-template-columns:1fr;}}
+.acct-theme-row{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;}
+.acct-theme-swatches{display:flex;gap:6px;padding-bottom:2px;}
+.acct-swatch{width:22px;height:22px;border-radius:6px;border:1px solid var(--border);display:block;}
+
+/* ===== DIALOG CHECKBOX LIST (More dialog account options) ===== */
+.dlg-check-list{display:flex;flex-direction:column;gap:7px;}
+.dlg-check-row{
+  display:flex;align-items:center;gap:10px;font-size:12.6px;
+  background:var(--surface-2);border:1px solid var(--border-soft);border-radius:7px;
+  padding:9px 12px;cursor:pointer;
+}
+.dlg-check-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--ember);flex-shrink:0;}
 .field-row-toggle span{font-size:12.8px;}
 .config-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border-soft);}
 
@@ -322,9 +381,9 @@ body{
   display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:700;color:var(--ember);
   border:1px solid var(--border);
 }
-.rank-owner{color:#FF8A3D;}
-.rank-admin{color:#E5595E;}
-.rank-moderator{color:#5B9DD9;}
+.rank-owner{color:var(--ember);}
+.rank-admin{color:var(--red);}
+.rank-moderator{color:var(--blue);}
 .rank-member{color:var(--text-dim);}
 
 .login-screen{
@@ -457,6 +516,20 @@ body{
 .res-graph{width:100%;height:46px;display:block;margin-top:6px;}
 
 .toast-wrap{position:fixed;bottom:98px;right:22px;display:flex;flex-direction:column;gap:8px;z-index:99;}
+.update-banner{
+  position:fixed;top:0;left:0;right:0;z-index:250;display:none;
+  background:linear-gradient(90deg,var(--ember-dim),var(--ember-dim));
+  color:#0B0E11;padding:9px 18px;font-size:12.8px;font-weight:600;
+  align-items:center;justify-content:center;gap:14px;
+}
+.update-banner a{color:#0B0E11;text-decoration:underline;}
+.update-banner .close-x{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:transparent;border:none;color:#0B0E11;cursor:pointer;font-size:15px;
+  opacity:.7;line-height:1;padding:4px;
+}
+.update-banner .close-x:hover{opacity:1;}
+.update-banner.show{display:flex;}
 .toast{
   background:var(--surface-3);border:1px solid var(--border);border-left:3px solid var(--ember);
   border-radius:7px;padding:10px 16px;font-size:12.5px;box-shadow:0 8px 22px rgba(0,0,0,.4);
@@ -472,6 +545,11 @@ body{
 </style>
 </head>
 <body>
+
+<div class="update-banner" id="updateBanner">
+  <span id="updateBannerText"></span>
+  <button class="close-x" id="updateBannerClose" title="Dismiss">✕</button>
+</div>
 
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
@@ -492,7 +570,50 @@ body{
       </div>
       <div class="login-error" id="loginError">Incorrect username or password.</div>
       <button type="button" class="btn btn-primary" id="loginSubmit" style="width:100%;justify-content:center;margin-top:16px;padding:11px;">Sign in</button>
+      <div style="text-align:center;margin-top:14px;">
+        <a href="#" id="toggleLocalAuthLink" style="font-size:11.5px;color:var(--text-faint);text-decoration:underline dotted;">Sign in with a local account instead</a>
+      </div>
     </form>
+  </div>
+</div>
+
+<div class="login-screen" id="forcedChangeScreen" style="display:none;z-index:210;">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-mark">!</div>
+      <div class="brand-text"><b>Password change required</b><span>Can't continue until this is done</span></div>
+    </div>
+    <p class="login-sub" id="forcedChangeReason">Your account requires a new password before you can continue.</p>
+    <div class="field">
+      <label>New password</label>
+      <input type="password" id="forcedNewPassword" placeholder="••••••••••••">
+    </div>
+    <div class="field" style="margin-top:12px;">
+      <label>Confirm new password</label>
+      <input type="password" id="forcedConfirmPassword" placeholder="••••••••••••">
+    </div>
+    <div class="login-error" id="forcedChangeError">Something went wrong.</div>
+    <button type="button" class="btn btn-primary" id="forcedChangeSubmit" style="width:100%;justify-content:center;margin-top:16px;padding:11px;">Set new password</button>
+    <button type="button" class="btn btn-ghost" id="forcedChangeLogout" style="width:100%;justify-content:center;margin-top:8px;padding:9px;">Sign out instead</button>
+  </div>
+</div>
+
+<div class="login-screen" id="serverPickerScreen" style="display:none;">
+  <div class="login-card" style="width:460px;">
+    <div class="login-brand">
+      <div class="brand-mark" id="pickerBrandMark">V</div>
+      <div class="brand-text"><b class="brand-name">Server</b><span>Choose a server</span></div>
+    </div>
+    <p class="login-sub">Pick which server or proxy to manage.</p>
+    <div id="serverPickerList" style="display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto;">
+      <div class="empty-state">Loading servers...</div>
+    </div>
+    <div class="session-row" style="margin-top:18px;">
+      <div class="session-info"><b id="pickerSessionUser">—</b><span id="pickerSessionRole">—</span></div>
+      <button class="logout-btn" id="pickerLogoutBtn" title="Sign out">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -500,7 +621,7 @@ body{
 <div class="sidebar">
   <div class="brand">
     <div class="brand-mark" id="sidebarBrandMark">V</div>
-    <div class="brand-text"><b class="brand-name">Server</b><span id="brandHost">—</span></div>
+    <div class="brand-text"><b class="brand-name">Server</b><span id="currentServerNameLabel" style="cursor:pointer;text-decoration:underline dotted;" title="Switch server">—</span></div>
   </div>
   <div class="nav" id="nav">
     <div class="nav-item active" data-tab="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</div>
@@ -515,6 +636,8 @@ body{
     <div class="nav-item" data-tab="players"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M22 20c0-2.9-1.9-5.4-4.6-6.4"/></svg>Player Manager</div>
     <div class="nav-item" data-tab="sftp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>SFTP Info</div>
     <div class="nav-item" data-tab="admins"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v6c0 4.5-3 8.2-7 9-4-.8-7-4.5-7-9V6z"/><path d="M9.5 12l1.8 1.8L15 10"/></svg>Administrator Management</div>
+    <div class="nav-item" data-tab="user-history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 106 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>User History</div>
+    <div class="nav-item" data-tab="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>My Account</div>
   </div>
   <div class="sidebar-foot"><span id="footVersion">—</span><span id="footNode">—</span></div>
   <div class="session-row">
@@ -758,26 +881,129 @@ body{
 
     <div class="panel" id="tab-admins">
       <div class="section-head">
-        <div><h2>Administrator Management</h2><p>Everyone with access to this panel — not to be confused with in-game LuckPerms ranks</p></div>
+        <div><h2>Administrator Management</h2><p>Fine Permissions for GUS-authenticated accounts — GUS owns who exists and their password, this owns what they can touch here</p></div>
       </div>
+
       <div class="card" style="margin-bottom:16px;">
-        <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">Add administrator</div>
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">Provision a GUS username</div>
         <div class="admin-form">
-          <div class="field"><label>Username</label><input type="text" id="newAdminUser" placeholder="Username"></div>
-          <div class="field"><label>Role</label>
-            <select id="newAdminRole"><option value="admin">Admin</option><option value="moderator" selected>Moderator</option></select>
-          </div>
-          <div class="field">
-            <label>Password</label>
-            <div style="display:flex;gap:6px;">
-              <input type="text" id="newAdminPass" placeholder="Set a password or generate one">
-              <button class="btn btn-sm btn-ghost" id="regenAdminPassBtn" title="Generate a random password" style="flex-shrink:0;">⟳</button>
-            </div>
-          </div>
-          <button class="btn btn-primary" id="addAdminBtn">+ Add</button>
+          <div class="field"><label>GUS username</label><input type="text" id="stageUsername" placeholder="e.g. steve (they don't need to have logged in yet)"></div>
+          <div class="field"><label>Grant extra tabs</label><input type="text" id="stageExtraTabs" placeholder="e.g. files,backups"></div>
+          <div class="field field-row-toggle" style="align-self:end;"><span>Power actions</span><div class="toggle" id="stagePowerToggle"></div></div>
+          <button class="btn btn-primary" id="stageBtn">+ Stage grant</button>
+        </div>
+        <div class="note" style="margin-top:12px;">Role always comes from GUS, read-only here. A staged grant resolves automatically the first time that username actually logs in — no account is created by this.</div>
+      </div>
+
+      <div class="list" id="gusRosterList" style="margin-bottom:16px;"><div class="empty-state">No accounts seen yet.</div></div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">GUS connection</div>
+        <div class="acct-form-grid">
+          <div class="field"><label>Base URL</label><input type="text" id="gusBaseUrl" placeholder="https://gus.example.com"></div>
+          <div class="field"><label>App ID</label><input type="text" id="gusAppId" placeholder="app id from bootstrap"></div>
+          <div class="field"><label>App secret</label><input type="password" id="gusAppSecret" placeholder="leave blank to keep current"></div>
+        </div>
+        <button class="btn btn-sm" id="saveGusSettingsBtn" style="margin-top:12px;">Save connection settings</button>
+      </div>
+
+      <div class="card" id="disableGusCard" style="border-color:rgba(229,89,94,.35);">
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:6px;color:var(--red);">Disable GUS</div>
+        <div class="note" style="margin-bottom:14px;">
+          GUS is meaningfully more secure than local accounts (centrally managed password policy, cross-app
+          session revocation, IP-scoped lockout). This is a deliberately hard switch to flip — three separate
+          checks are required, all logged. Only do this if you genuinely need to.
+        </div>
+        <div id="gusEnabledStatus" style="font-size:12.5px;margin-bottom:14px;">—</div>
+        <div id="disableGusForm" style="display:flex;flex-direction:column;gap:12px;max-width:420px;">
+          <div class="field"><label>Type "DISABLE GUS" to confirm</label><input type="text" id="disableConfirmPhrase" placeholder="DISABLE GUS"></div>
+          <div class="field"><label>Your current password</label><input type="password" id="disableCurrentPassword"></div>
+          <div class="field"><label>Reason (required, min. 10 characters)</label><input type="text" id="disableReason" placeholder="Why are you disabling GUS?"></div>
+          <button class="btn btn-danger" id="disableGusBtn" style="align-self:flex-start;">Disable GUS</button>
+        </div>
+        <button class="btn btn-primary" id="enableGusBtn" style="display:none;">Re-enable GUS</button>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-user-history">
+      <div class="section-head">
+        <div><h2>User History</h2><p>Sign-ins and admin actions, plus tracked failed sign-in attempts</p></div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="badge off" id="failedLoginTicker" style="cursor:pointer;font-size:11.5px;padding:5px 12px;" title="Click to view details">0 failed attempts (24h)</div>
         </div>
       </div>
-      <div class="list" id="adminList"><div class="empty-state">No administrator data loaded.</div></div>
+      <div class="card" style="padding:0;margin-bottom:16px;">
+        <table class="file-table">
+          <thead><tr><th style="width:110px;">Time</th><th style="width:120px;">Type</th><th>Event</th></tr></thead>
+          <tbody id="userHistoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel" id="tab-account">
+      <div class="section-head">
+        <div><h2>My Account</h2><p>Your own profile, password, and preferences</p></div>
+      </div>
+
+      <div class="card acct-hero" style="margin-bottom:16px;">
+        <div class="acct-hero-avatar-wrap">
+          <div id="acctAvatarPreview" class="avatar acct-hero-avatar">—</div>
+          <label class="acct-avatar-edit-btn" title="Upload a new picture">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <input type="file" id="acctAvatarInput" accept="image/png,image/jpeg,image/webp" style="display:none;">
+          </label>
+        </div>
+        <div class="acct-hero-info">
+          <div class="acct-hero-name-row">
+            <span id="acctHeroUsername" class="acct-hero-username">—</span>
+            <span id="acctHeroRoleBadge" class="role-badge role-owner">—</span>
+          </div>
+          <button class="btn btn-sm btn-ghost" id="acctAvatarRemoveBtn" style="align-self:flex-start;margin-top:4px;">Remove picture</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="acct-card-title">Profile</div>
+        <div class="acct-form-grid">
+          <div class="field"><label>Full name</label><input type="text" id="acctFullName" placeholder="Your name"></div>
+          <div class="field"><label>Description</label><input type="text" id="acctDescription" placeholder="e.g. job title, note"></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="acctSaveProfileBtn">Save profile</button></div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div class="acct-card-title">Appearance</div>
+        <div class="acct-theme-row">
+          <div class="field" style="flex:1;min-width:200px;margin-bottom:0;">
+            <label>Theme</label>
+            <select id="themePicker">
+              <option value="ember">Ember (default)</option>
+              <option value="ocean">Ocean</option>
+              <option value="forest">Forest</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+          <div class="acct-theme-swatches" id="themeSwatchPreview">
+            <span class="acct-swatch" data-swatch="bg"></span>
+            <span class="acct-swatch" data-swatch="surface"></span>
+            <span class="acct-swatch" data-swatch="ember"></span>
+            <span class="acct-swatch" data-swatch="green"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" id="acctPasswordCard">
+        <div class="acct-card-title">Change password</div>
+        <div id="acctPasswordFields" class="acct-form-grid" style="max-width:400px;">
+          <div class="field" id="acctCurrentPasswordField"><label>Current password</label><input type="password" id="acctCurrentPassword"></div>
+          <div class="field"><label>New password</label><input type="password" id="acctNewPassword"></div>
+          <div class="field"><label>Confirm new password</label><input type="password" id="acctConfirmPassword"></div>
+        </div>
+        <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="acctChangePasswordBtn">Change password</button></div>
+        <div class="note" id="acctCannotChangeNote" style="display:none;margin-top:14px;">
+          <b>This account cannot change its own password.</b> Ask an owner to reset it from Administrator Management.
+        </div>
+      </div>
     </div>
 
   </div>
@@ -828,12 +1054,31 @@ async function api(path, opts={}){
   });
   let body = null;
   try { body = await res.json(); } catch(e) {}
+  if(res.status === 428 && body && body.requirePasswordChange){
+    showForcedPasswordChange();
+  }
+  if(res.status === 403 && body && /disabled/i.test(body.error||'')){
+    // Account was disabled mid-session — bounce back to the login screen.
+    forceLogoutDisabled(body.error);
+  }
   if(!res.ok){
     const err = new Error((body && body.error) || ('Request failed: '+res.status));
     err.status = res.status;
     throw err;
   }
   return body;
+}
+
+/* ---------- MULTI-SERVER ---------- */
+// Every server-scoped endpoint (files, backups, schedules, players,
+// plugins, config, power, command, stats, sftp) lives under
+// /api/servers/<id>/... — panel-level endpoints (login, account, admins,
+// branding, activity) stay unprefixed and keep using api() directly.
+let currentServerId = null;
+let currentServerName2 = null; // display name of the currently selected server (distinct from panel branding name)
+function serverApi(path, opts={}){
+  if(!currentServerId) return Promise.reject(new Error('No server selected'));
+  return api(`/api/servers/${encodeURIComponent(currentServerId)}${path}`, opts);
 }
 
 /* ---------- BRANDING (public — needed on the login screen too) ---------- */
@@ -875,19 +1120,159 @@ const loginUserInput = document.getElementById('loginUser');
 const loginPassInput = document.getElementById('loginPass');
 let currentRole = null;
 let serverType = 'paper';
+let currentUsername = null;
+let currentPermissions = { tabs: [], powerActions: false };
 
-function applySession(user, role, type){
-  currentRole = role;
-  serverType = type === 'velocity' ? 'velocity' : 'paper';
-  document.getElementById('sessionUser').textContent = user;
-  document.getElementById('sessionRole').textContent = role;
-  document.getElementById('sessionAvatar').textContent = user.slice(0,2).toUpperCase();
+function applySession(data){
+  currentRole = data.role;
+  currentUsername = data.user;
+  currentPermissions = data.permissions || { tabs: [], powerActions: false };
+
+  document.getElementById('sessionUser').textContent = data.user;
+  document.getElementById('sessionRole').textContent = data.role;
+  document.getElementById('sessionAvatar').textContent = data.user.slice(0,2).toUpperCase();
   const dashName = document.getElementById('dashUserName');
-  if(dashName) dashName.textContent = user;
-  document.querySelector('[data-tab="admins"]').style.display = (role==='owner'||role==='admin') ? '' : 'none';
+  if(dashName) dashName.textContent = data.user;
+
+  // Nav gating — hide anything this user's effective permissions don't cover.
+  document.querySelectorAll('.nav-item[data-tab]').forEach(el=>{
+    const tab = el.dataset.tab;
+    el.style.display = currentPermissions.tabs.includes(tab) ? '' : 'none';
+  });
+
+  // Power controls and nav visibility both key off currentPermissions,
+  // which is now set — re-run applyState so buttons reflect it immediately.
+  applyState(serverState);
+
+  applyTheme(data.theme || 'ember');
+  updateAccountAvatarSidebar();
+
+  if(data.requirePasswordChange) showForcedPasswordChange();
+  else hideForcedPasswordChange();
+
+  // Fire-and-forget — never let this affect login/session responsiveness.
+  // Backend already returns null for non-owners, so this is safe to call
+  // unconditionally.
+  checkForUpdate();
+}
+
+/** Applied once a specific server is selected (or auto-selected) — this
+ *  is where anything that depends on WHICH server you're looking at
+ *  (Paper vs Velocity labeling, page title) gets set, separate from
+ *  applySession()'s user-level stuff which doesn't change per server. */
+function applyServerContext(meta){
+  currentServerId = meta.id;
+  currentServerName2 = meta.name;
+  serverType = meta.type === 'velocity' ? 'velocity' : 'paper';
   document.getElementById('navConfigLabel').textContent = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
   titles.config = serverType==='velocity' ? 'Proxy Configuration' : 'MC Configuration';
+  const nameEl = document.getElementById('currentServerNameLabel');
+  if(nameEl) nameEl.textContent = meta.name;
 }
+
+/* ---------- SERVER PICKER ---------- */
+const serverPickerScreen = document.getElementById('serverPickerScreen');
+let totalServerCount = 1;
+async function enterServer(meta){
+  applyServerContext(meta);
+  serverPickerScreen.style.display = 'none';
+  appShell.style.display = 'flex';
+  initLiveConnection();
+  loadAllTabs();
+}
+document.getElementById('currentServerNameLabel').addEventListener('click', ()=>{
+  if(totalServerCount > 1) leaveServer();
+});
+function leaveServer(){
+  if(liveSocket){ liveSocket.close(); liveSocket = null; }
+  appShell.style.display = 'none';
+  currentServerId = null;
+  showServerPicker();
+}
+async function showServerPicker(){
+  loginScreen.style.display = 'none';
+  appShell.style.display = 'none';
+  serverPickerScreen.style.display = 'flex';
+  document.getElementById('pickerSessionUser').textContent = currentUsername || '—';
+  document.getElementById('pickerSessionRole').textContent = currentRole || '—';
+  const list = document.getElementById('serverPickerList');
+  list.innerHTML = `<div class="empty-state">Loading servers...</div>`;
+  try{
+    const servers = await api('/api/servers');
+    totalServerCount = servers.length;
+    if(servers.length === 0){ list.innerHTML = `<div class="empty-state">No servers configured — add one to config/servers.yml.</div>`; return; }
+    list.innerHTML = '';
+    servers.forEach(s=>{
+      const row = document.createElement('div');
+      row.className = 'row-card server-pick-row';
+      const stateLabel = {online:'ONLINE',offline:'OFFLINE',starting:'STARTING',stopping:'STOPPING',restarting:'RESTARTING'}[s.state] || s.state;
+      row.innerHTML = `
+        <div class="row-left">
+          <div class="row-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg></div>
+          <div><div class="row-title">${escapeHtml(s.name)}</div><div class="row-sub">${s.type==='velocity'?'Velocity proxy':'Paper server'}</div></div>
+        </div>
+        <span class="badge ${s.state==='online'?'on':'off'}">${stateLabel}</span>`;
+      row.addEventListener('click', ()=> enterServer(s));
+      list.appendChild(row);
+    });
+  } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
+}
+document.getElementById('pickerLogoutBtn').addEventListener('click', async function(){
+  try{ await api('/api/logout', { method:'POST' }); } catch(e){}
+  serverPickerScreen.style.display = 'none';
+  loginScreen.style.display = 'flex';
+  loginUserInput.value = '';
+  loginPassInput.value = '';
+});
+
+/** After login/session-check, either jump straight into the only server
+ *  (matching the pre-multi-server experience exactly) or show the picker. */
+async function routeToServer(singleServerId){
+  if(singleServerId){
+    try{
+      const servers = await api('/api/servers');
+      totalServerCount = servers.length;
+      const meta = servers.find(s=>s.id===singleServerId) || { id: singleServerId, name: singleServerId, type: 'paper' };
+      loginScreen.style.display = 'none';
+      serverPickerScreen.style.display = 'none';
+      appShell.style.display = 'flex';
+      await enterServer(meta);
+      return;
+    } catch(err){ /* fall through to picker if this somehow fails */ }
+  }
+  await showServerPicker();
+}
+
+let updateCheckDismissed = false;
+async function checkForUpdate(){
+  if(updateCheckDismissed) return;
+  try{
+    const info = await api('/api/update-check');
+    const banner = document.getElementById('updateBanner');
+    if(info && info.available){
+      document.getElementById('updateBannerText').innerHTML =
+        `A new version of ${currentServerName || 'Interstellar Console'} is available — v${info.latestVersion} (currently v${info.currentVersion}). <a href="${info.url}" target="_blank" rel="noopener">View release</a>`;
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  } catch(err){ /* fail silent — this is a courtesy notice, not core functionality */ }
+}
+document.getElementById('updateBannerClose').addEventListener('click', ()=>{
+  updateCheckDismissed = true;
+  document.getElementById('updateBanner').classList.remove('show');
+});
+
+let useLocalAuth = false;
+document.getElementById('toggleLocalAuthLink').addEventListener('click', (e)=>{
+  e.preventDefault();
+  useLocalAuth = !useLocalAuth;
+  const link = document.getElementById('toggleLocalAuthLink');
+  link.textContent = useLocalAuth ? 'Use GUS instead' : 'Sign in with a local account instead';
+  document.querySelector('.login-sub').textContent = useLocalAuth
+    ? 'Local account mode — for emergencies when GUS is unreachable.'
+    : 'Local/authorized access only — sign in to continue.';
+});
 
 async function attemptLogin(){
   const user = loginUserInput.value.trim();
@@ -896,14 +1281,11 @@ async function attemptLogin(){
   const btn = document.getElementById('loginSubmit');
   btn.disabled = true; btn.textContent = 'Signing in...';
   try{
-    const result = await api('/api/login', { method:'POST', body: JSON.stringify({ username:user, password:pass }) });
+    const result = await api('/api/login', { method:'POST', body: JSON.stringify({ username:user, password:pass, useLocalAuth }) });
     loginError.classList.remove('show');
-    loginScreen.style.display = 'none';
-    appShell.style.display = 'flex';
-    applySession(result.user, result.role, result.serverType);
+    applySession(result);
     toast('Welcome back, '+result.user);
-    initLiveConnection();
-    loadAllTabs();
+    await routeToServer(result.singleServerId);
   } catch(err){
     loginError.textContent = err.message || 'Incorrect username or password.';
     loginError.classList.add('show');
@@ -924,6 +1306,7 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
   try{ await api('/api/logout', { method:'POST' }); } catch(e){}
   if(liveSocket) { liveSocket.close(); liveSocket = null; }
   appShell.style.display = 'none';
+  serverPickerScreen.style.display = 'none';
   loginScreen.style.display = 'flex';
   loginUserInput.value = '';
   loginPassInput.value = '';
@@ -933,20 +1316,18 @@ document.getElementById('logoutBtn').addEventListener('click', async function(){
 (async function checkExistingSession(){
   try{
     const s = await api('/api/session');
-    loginScreen.style.display = 'none';
-    appShell.style.display = 'flex';
-    applySession(s.user, s.role, s.serverType);
-    initLiveConnection();
-    loadAllTabs();
+    applySession(s);
+    await routeToServer(s.singleServerId);
   } catch(e){}
 })();
 
 /* ---------- NAV ---------- */
-const titles = {dashboard:'Dashboard',console:'Console',files:'File Manager',backups:'Backups',schedules:'Schedules',tasks:'Quick Tasks',config:'MC Configuration','plugins-installed':'Installed Plugins','plugins-installer':'Plugin Installer',players:'Player Manager',sftp:'SFTP Information',admins:'Administrator Management'};
+const titles = {dashboard:'Dashboard',console:'Console',files:'File Manager',backups:'Backups',schedules:'Schedules',tasks:'Quick Tasks',config:'MC Configuration','plugins-installed':'Installed Plugins','plugins-installer':'Plugin Installer',players:'Player Manager',sftp:'SFTP Information',admins:'Administrator Management','user-history':'User History',account:'My Account'};
 const tabLoaders = {
   dashboard: renderActivity, files: renderFiles, backups: renderBackups, schedules: renderSchedules,
   config: loadConfig, 'plugins-installed': renderInstalledPlugins,
-  players: renderPlayers, sftp: renderSftp, admins: renderAdmins, tasks: renderTaskGrid,
+  players: renderPlayers, sftp: renderSftp, admins: renderAdminsTab, tasks: renderTaskGrid,
+  account: renderAccount, 'user-history': renderUserHistory,
 };
 function switchTab(tab){
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.toggle('active', i.dataset.tab===tab));
@@ -1043,10 +1424,15 @@ function applyState(state){
   if(state==='offline') pill.classList.add('st-offline');
   else if(state!=='online') pill.classList.add('st-transit');
 
-  btnStart.disabled   = state!=='offline';
-  btnRestart.disabled = state!=='online';
-  btnStop.disabled    = state!=='online';
-  btnKill.disabled    = state==='offline';
+  const canPower = currentPermissions.powerActions;
+  btnStart.disabled   = state!=='offline' || !canPower;
+  btnRestart.disabled = state!=='online' || !canPower;
+  btnStop.disabled    = state!=='online' || !canPower;
+  btnKill.disabled    = state==='offline' || !canPower;
+  [btnStart, btnRestart, btnStop, btnKill].forEach(b=>{
+    b.style.display = canPower ? '' : 'none';
+    b.title = canPower ? b.title : "You don't have permission to control the server process";
+  });
 
   const dashTpsBadge = document.getElementById('dashTpsBadge');
   if(dashTpsBadge){ dashTpsBadge.textContent = labels[state]||state; dashTpsBadge.className = 'badge '+(state==='online'?'on':'off'); }
@@ -1061,13 +1447,13 @@ function applyState(state){
 }
 applyState('offline');
 
-async function doStart(){ if(serverState!=='offline') return; try{ await api('/api/power/start', {method:'POST'}); toast('Server starting...'); } catch(err){ toast('Start failed: '+err.message); } }
-async function doRestart(){ if(serverState!=='online') return; try{ await api('/api/power/restart', {method:'POST'}); toast('Restarting server...'); } catch(err){ toast('Restart failed: '+err.message); } }
-async function doStop(){ if(serverState!=='online') return; try{ await api('/api/power/stop', {method:'POST'}); toast('Stopping server...'); } catch(err){ toast('Stop failed: '+err.message); } }
+async function doStart(){ if(serverState!=='offline') return; try{ await serverApi('/power/start', {method:'POST'}); toast('Server starting...'); } catch(err){ toast('Start failed: '+err.message); } }
+async function doRestart(){ if(serverState!=='online') return; try{ await serverApi('/power/restart', {method:'POST'}); toast('Restarting server...'); } catch(err){ toast('Restart failed: '+err.message); } }
+async function doStop(){ if(serverState!=='online') return; try{ await serverApi('/power/stop', {method:'POST'}); toast('Stopping server...'); } catch(err){ toast('Stop failed: '+err.message); } }
 async function doKill(){
   if(serverState==='offline') return;
   if(!confirm('Force kill the server process? Unsaved world changes since the last autosave will be lost.')) return;
-  try{ await api('/api/power/kill', {method:'POST'}); toast('Process killed'); } catch(err){ toast('Kill failed: '+err.message); }
+  try{ await serverApi('/power/kill', {method:'POST'}); toast('Process killed'); } catch(err){ toast('Kill failed: '+err.message); }
 }
 btnStart.addEventListener('click', doStart);
 btnRestart.addEventListener('click', doRestart);
@@ -1123,19 +1509,22 @@ function drawGraph(canvas, data, maxVal, colorHex){
   const last = pts[pts.length-1];
   ctx.beginPath(); ctx.arc(last.x, last.y, 2.6, 0, Math.PI*2); ctx.fillStyle = colorHex; ctx.fill();
 }
-function colorFor(pct, baseHex){ if(pct>85) return '#E5595E'; if(pct>65) return '#E3B341'; return baseHex; }
+function themeColor(varName){
+  return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+}
+function colorFor(pct, baseHex){ if(pct>85) return themeColor('--red'); if(pct>65) return themeColor('--yellow'); return baseHex; }
 function renderRes(){
   try{
     document.getElementById('cpuText').textContent = memMax ? cpu.toFixed(0)+'%' : '—%';
-    drawGraph(document.getElementById('cpuGraph'), cpuHist, 100, colorFor(cpu, '#FF8A3D'));
+    drawGraph(document.getElementById('cpuGraph'), cpuHist, 100, colorFor(cpu, themeColor('--ember')));
     const memPct = memMax ? (mem/memMax)*100 : 0;
     document.getElementById('memText').textContent = memMax ? mem.toFixed(1)+' GB' : '—';
     document.getElementById('memSub').textContent = memMax ? ('of '+memMax.toFixed(0)+' GB') : '—';
-    drawGraph(document.getElementById('memGraph'), memHist, memMax, colorFor(memPct, '#5B9DD9'));
+    drawGraph(document.getElementById('memGraph'), memHist, memMax, colorFor(memPct, themeColor('--blue')));
     const diskPct = diskMax ? (disk/diskMax)*100 : 0;
     document.getElementById('diskText').textContent = diskMax ? disk.toFixed(1)+' GB' : '—';
     document.getElementById('diskSub').textContent = diskMax ? ('of '+diskMax.toFixed(0)+' GB') : '—';
-    drawGraph(document.getElementById('diskGraph'), diskHist, diskMax, colorFor(diskPct, '#5FBF9F'));
+    drawGraph(document.getElementById('diskGraph'), diskHist, diskMax, colorFor(diskPct, themeColor('--green')));
   } catch(err){}
 }
 renderRes();
@@ -1293,7 +1682,7 @@ async function sendCmd(){
   const val = inp.value.trim();
   if(!val) return;
   inp.value='';
-  try{ await api('/api/command', { method:'POST', body: JSON.stringify({ command: val }) }); }
+  try{ await serverApi('/command', { method:'POST', body: JSON.stringify({ command: val }) }); }
   catch(err){ toast('Command failed: '+err.message); }
 }
 document.getElementById('cmdSend').addEventListener('click',sendCmd);
@@ -1304,7 +1693,7 @@ let liveSocket = null;
 function initLiveConnection(){
   if(liveSocket) return;
   const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
-  liveSocket = new WebSocket(`${proto}//${location.host}/ws`);
+  liveSocket = new WebSocket(`${proto}//${location.host}/ws?server=${encodeURIComponent(currentServerId)}`);
   liveSocket.addEventListener('message', (ev)=>{
     let msg;
     try{ msg = JSON.parse(ev.data); } catch(e){ return; }
@@ -1320,8 +1709,8 @@ function initLiveConnection(){
     if(appShell.style.display !== 'none') setTimeout(initLiveConnection, 2000);
   });
   liveSocket.addEventListener('error', ()=>{});
-  api('/api/status').then(s=>applyState(s.state)).catch(()=>{});
-  api('/api/stats').then(s=>applyStats(s, 0)).catch(()=>{});
+  serverApi('/status').then(s=>applyState(s.state)).catch(()=>{});
+  serverApi('/stats').then(s=>applyStats(s, 0)).catch(()=>{});
 }
 
 /* ---------- FILES ---------- */
@@ -1343,7 +1732,7 @@ async function renderFiles(){
   const body = document.getElementById('fileBody');
   body.innerHTML = `<tr><td colspan="4" style="color:var(--text-faint);padding:22px 10px;text-align:center;">Loading...</td></tr>`;
   let items;
-  try{ items = await api('/api/files?path='+encodeURIComponent(curPath)); }
+  try{ items = await serverApi('/files?path='+encodeURIComponent(curPath)); }
   catch(err){ body.innerHTML = `<tr><td colspan="4" style="color:var(--red);padding:22px 10px;text-align:center;">${err.message}</td></tr>`; return; }
   body.innerHTML = '';
   items.forEach(it=>{
@@ -1386,12 +1775,12 @@ function renderCrumb(){
 }
 async function deleteFile(relPath){
   if(!confirm('Delete '+relPath+'? This cannot be undone.')) return;
-  try{ await api('/api/files', { method:'DELETE', body: JSON.stringify({ path: relPath }) }); renderFiles(); toast('Deleted'); }
+  try{ await serverApi('/files', { method:'DELETE', body: JSON.stringify({ path: relPath }) }); renderFiles(); toast('Deleted'); }
   catch(err){ toast('Delete failed: '+err.message); }
 }
 async function openFileEditor(relPath){
   let content;
-  try{ content = (await api('/api/files/content?path='+encodeURIComponent(relPath))).content; }
+  try{ content = (await serverApi('/files/content?path='+encodeURIComponent(relPath))).content; }
   catch(err){ toast('Could not open file: '+err.message); return; }
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
@@ -1413,14 +1802,14 @@ async function openFileEditor(relPath){
   overlay.querySelector('#editorCancel').addEventListener('click', close);
   overlay.querySelector('#editorSave').addEventListener('click', async ()=>{
     const newContent = overlay.querySelector('#editorArea').value;
-    try{ await api('/api/files/content', { method:'PUT', body: JSON.stringify({ path: relPath, content: newContent }) }); toast('Saved '+relPath); close(); }
+    try{ await serverApi('/files/content', { method:'PUT', body: JSON.stringify({ path: relPath, content: newContent }) }); toast('Saved '+relPath); close(); }
     catch(err){ toast('Save failed: '+err.message); }
   });
 }
 document.getElementById('newFolderBtn').addEventListener('click', async ()=>{
   const name = prompt('New folder name:');
   if(!name) return;
-  try{ await api('/api/files/mkdir', { method:'POST', body: JSON.stringify({ path: (curPath?curPath+'/':'')+name }) }); renderFiles(); toast('Folder created'); }
+  try{ await serverApi('/files/mkdir', { method:'POST', body: JSON.stringify({ path: (curPath?curPath+'/':'')+name }) }); renderFiles(); toast('Folder created'); }
   catch(err){ toast('Failed: '+err.message); }
 });
 document.getElementById('uploadBtn').addEventListener('click', ()=>{
@@ -1433,7 +1822,7 @@ document.getElementById('uploadBtn').addEventListener('click', ()=>{
     formData.append('file', file);
     formData.append('path', curPath);
     try{
-      const res = await fetch('/api/files/upload', { method:'POST', body: formData, credentials:'include' });
+      const res = await fetch(`/api/servers/${encodeURIComponent(currentServerId)}/files/upload`, { method:'POST', body: formData, credentials:'include' });
       if(!res.ok) throw new Error((await res.json()).error || 'Upload failed');
       renderFiles(); toast('Uploaded '+file.name);
     } catch(err){ toast('Upload failed: '+err.message); }
@@ -1446,7 +1835,7 @@ async function renderBackups(){
   const list = document.getElementById('backupList');
   list.innerHTML = `<div class="empty-state">Loading...</div>`;
   try{
-    const items = await api('/api/backups');
+    const items = await serverApi('/backups');
     if(items.length===0){ list.innerHTML = `<div class="empty-state">No backups yet.</div>`; return; }
     list.innerHTML = '';
     items.forEach(b=>{
@@ -1463,12 +1852,12 @@ async function renderBackups(){
         </div>`;
       row.querySelector('[data-act="restore"]').addEventListener('click', async ()=>{
         if(!confirm('Restore '+b.name+'? The server must be offline, and this overwrites current world/plugin data.')) return;
-        try{ await api('/api/backups/'+encodeURIComponent(b.name)+'/restore', {method:'POST'}); toast('Restored '+b.name); }
+        try{ await serverApi('/backups/'+encodeURIComponent(b.name)+'/restore', {method:'POST'}); toast('Restored '+b.name); }
         catch(err){ toast('Restore failed: '+err.message); }
       });
       row.querySelector('[data-act="delete"]').addEventListener('click', async ()=>{
         if(!confirm('Delete backup '+b.name+'?')) return;
-        try{ await api('/api/backups/'+encodeURIComponent(b.name), {method:'DELETE'}); renderBackups(); toast('Deleted'); }
+        try{ await serverApi('/backups/'+encodeURIComponent(b.name), {method:'DELETE'}); renderBackups(); toast('Deleted'); }
         catch(err){ toast('Delete failed: '+err.message); }
       });
       list.appendChild(row);
@@ -1477,7 +1866,7 @@ async function renderBackups(){
 }
 document.getElementById('createBackupBtn').addEventListener('click', async ()=>{
   const label = prompt('Label for this backup (optional):','manual') || 'manual';
-  try{ await api('/api/backups', {method:'POST', body: JSON.stringify({label})}); toast('Backup created'); renderBackups(); }
+  try{ await serverApi('/backups', {method:'POST', body: JSON.stringify({label})}); toast('Backup created'); renderBackups(); }
   catch(err){ toast('Backup failed: '+err.message); }
 });
 
@@ -1537,7 +1926,7 @@ const tasks = [
 ];
 async function runCommand(cmd, successMsg){
   if(serverState!=='online'){ toast('Server is offline — nothing to send that to.'); return; }
-  try{ await api('/api/command', { method:'POST', body: JSON.stringify({ command: cmd }) }); toast(successMsg); }
+  try{ await serverApi('/command', { method:'POST', body: JSON.stringify({ command: cmd }) }); toast(successMsg); }
   catch(err){ toast('Failed: '+err.message); }
 }
 function renderTaskGrid(){
@@ -1612,7 +2001,7 @@ function renderConfigList(filter){
 
 async function loadConfig(){
   try{
-    const c = await api('/api/config');
+    const c = await serverApi('/config');
     cfgEntries = c.entries;
     const isVelocity = c.type === 'velocity';
     document.getElementById('configTabTitle').textContent = isVelocity ? 'Proxy Configuration' : 'MC Configuration';
@@ -1639,7 +2028,7 @@ document.getElementById('saveConfigBtn').addEventListener('click', async ()=>{
     if(el.classList.contains('toggle')){ updates[fullKey] = el.classList.contains('on') ? 'true' : 'false'; }
     else { updates[fullKey] = el.value; }
   });
-  try{ const r = await api('/api/config', {method:'PUT', body: JSON.stringify({updates})}); toast(r.note || 'Saved'); loadConfig(); }
+  try{ const r = await serverApi('/config', {method:'PUT', body: JSON.stringify({updates})}); toast(r.note || 'Saved'); loadConfig(); }
   catch(err){ toast('Save failed: '+err.message); }
 });
 document.getElementById('revertConfigBtn').addEventListener('click', loadConfig);
@@ -1661,7 +2050,7 @@ async function renderInstalledPlugins(){
   const list = document.getElementById('installedPluginList');
   list.innerHTML = `<div class="empty-state">Loading...</div>`;
   try{
-    const items = await api('/api/plugins/installed');
+    const items = await serverApi('/plugins/installed');
     document.getElementById('installedCount').textContent = items.length+' plugin'+(items.length===1?'':'s')+' installed';
     if(items.length===0){ list.innerHTML = `<div class="empty-state">No plugins installed yet.</div>`; return; }
     list.innerHTML = '';
@@ -1676,7 +2065,7 @@ async function renderInstalledPlugins(){
         <div class="row-actions"><button class="btn btn-sm btn-danger" data-act="remove">Remove</button></div>`;
       row.querySelector('[data-act="remove"]').addEventListener('click', async ()=>{
         if(!confirm('Remove '+p.fileName+'? Requires a restart to take effect.')) return;
-        try{ await api('/api/plugins/installed/'+encodeURIComponent(p.fileName), {method:'DELETE'}); renderInstalledPlugins(); toast('Removed'); }
+        try{ await serverApi('/plugins/installed/'+encodeURIComponent(p.fileName), {method:'DELETE'}); renderInstalledPlugins(); toast('Removed'); }
         catch(err){ toast('Failed: '+err.message); }
       });
       list.appendChild(row);
@@ -1701,7 +2090,7 @@ async function searchPlugins(q){
   const catalog = document.getElementById('pluginCatalog');
   catalog.innerHTML = `<div class="empty-state">Searching...</div>`;
   try{
-    const results = await api('/api/plugins/search?q='+encodeURIComponent(q));
+    const results = await serverApi('/plugins/search?q='+encodeURIComponent(q));
     if(results.length===0){ catalog.innerHTML = `<div class="empty-state">No results.</div>`; return; }
     catalog.innerHTML = '';
     results.forEach(p=>{
@@ -1718,7 +2107,7 @@ async function searchPlugins(q){
         <div class="plugin-card-foot"><button class="btn btn-sm btn-primary" data-act="install">Install</button></div>`;
       card.querySelector('[data-act="install"]').addEventListener('click', async (e)=>{
         e.target.disabled = true; e.target.textContent = 'Installing...';
-        try{ await api('/api/plugins/install', {method:'POST', body: JSON.stringify({owner, slug: slug||p.slug})}); toast('Installed '+(slug||p.slug)); e.target.textContent = 'Installed'; }
+        try{ await serverApi('/plugins/install', {method:'POST', body: JSON.stringify({owner, slug: slug||p.slug})}); toast('Installed '+(slug||p.slug)); e.target.textContent = 'Installed'; }
         catch(err){ toast('Install failed: '+err.message); e.target.disabled=false; e.target.textContent='Install'; }
       });
       catalog.appendChild(card);
@@ -1734,7 +2123,7 @@ async function renderPlayers(){
   const sub = document.getElementById('playersSub');
 
   let resp;
-  try{ resp = await api('/api/players'); }
+  try{ resp = await serverApi('/players'); }
   catch(err){ toast('Could not load players: '+err.message); return; }
 
   if(resp.type === 'velocity'){
@@ -1771,15 +2160,15 @@ async function renderPlayers(){
         <button class="btn btn-sm btn-danger" data-act="ban">${p.banned?'Unban':'Ban'}</button>
       </td>`;
     tr.querySelector('[data-act="op"]')?.addEventListener('click', async ()=>{
-      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.rank==='member'?'/op':'/deop'), {method:'POST'}); renderPlayers(); }
+      try{ await serverApi('/players/'+encodeURIComponent(p.name)+(p.rank==='member'?'/op':'/deop'), {method:'POST'}); renderPlayers(); }
       catch(err){ toast('Failed: '+err.message); }
     });
     tr.querySelector('[data-act="kick"]')?.addEventListener('click', async ()=>{
-      try{ await api('/api/players/'+encodeURIComponent(p.name)+'/kick', {method:'POST', body: JSON.stringify({})}); toast('Kicked '+p.name); renderPlayers(); }
+      try{ await serverApi('/players/'+encodeURIComponent(p.name)+'/kick', {method:'POST', body: JSON.stringify({})}); toast('Kicked '+p.name); renderPlayers(); }
       catch(err){ toast('Failed: '+err.message); }
     });
     tr.querySelector('[data-act="ban"]')?.addEventListener('click', async ()=>{
-      try{ await api('/api/players/'+encodeURIComponent(p.name)+(p.banned?'/unban':'/ban'), {method:'POST', body: JSON.stringify({})}); toast((p.banned?'Unbanned ':'Banned ')+p.name); renderPlayers(); }
+      try{ await serverApi('/players/'+encodeURIComponent(p.name)+(p.banned?'/unban':'/ban'), {method:'POST', body: JSON.stringify({})}); toast((p.banned?'Unbanned ':'Banned ')+p.name); renderPlayers(); }
       catch(err){ toast('Failed: '+err.message); }
     });
     body.appendChild(tr);
@@ -1793,7 +2182,7 @@ document.getElementById('playerSearch').addEventListener('input', (e)=>{
 /* ---------- SFTP ---------- */
 async function renderSftp(){
   try{
-    const info = await api('/api/sftp-info');
+    const info = await serverApi('/sftp-info');
     document.getElementById('sftpHost').textContent = info.host;
     document.getElementById('sftpPort').textContent = info.port;
     document.getElementById('sftpUser').textContent = info.username;
@@ -1812,67 +2201,385 @@ document.querySelectorAll('.copy-btn').forEach(btn=>{
   });
 });
 
-/* ---------- ADMINISTRATOR MANAGEMENT ---------- */
-function genPassword(){
-  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-  let out = '';
-  for(let i=0;i<12;i++) out += chars[Math.floor(Math.random()*chars.length)];
-  return out;
+/* ---------- ADMINISTRATOR MANAGEMENT (GUS Fine Permissions) ---------- */
+const PERMISSION_TAB_LABELS = {
+  dashboard:'Dashboard', console:'Console', files:'Files', backups:'Backups', schedules:'Schedules',
+  tasks:'Quick Tasks', config:'MC Configuration', 'plugins-installed':'Installed Plugins',
+  'plugins-installer':'Plugin Installer', players:'Player Manager', sftp:'SFTP Info', admins:'Administrator Management',
+};
+
+async function renderAdminsTab(){
+  await renderGusSettings();
+  await renderGusRoster();
 }
-document.getElementById('newAdminPass').value = genPassword();
-document.getElementById('regenAdminPassBtn').addEventListener('click', ()=>{
-  document.getElementById('newAdminPass').value = genPassword();
+
+async function renderGusSettings(){
+  try{
+    const s = await api('/api/gus/settings');
+    document.getElementById('gusBaseUrl').value = s.baseUrl || '';
+    document.getElementById('gusAppId').value = s.appId || '';
+    document.getElementById('gusAppSecret').value = '';
+    document.getElementById('gusAppSecret').placeholder = s.appSecretSet ? 'Set — leave blank to keep it' : 'Not set yet';
+    const statusEl = document.getElementById('gusEnabledStatus');
+    statusEl.innerHTML = s.enabled
+      ? '<span class="badge on">ENABLED</span> — this is the default login path'
+      : '<span class="badge off" style="color:var(--red);">DISABLED</span> — local accounts are the only way in right now';
+    document.getElementById('disableGusForm').style.display = s.enabled ? '' : 'none';
+    document.getElementById('enableGusBtn').style.display = s.enabled ? 'none' : '';
+  } catch(err){ toast('Could not load GUS settings: '+err.message); }
+}
+document.getElementById('saveGusSettingsBtn').addEventListener('click', async ()=>{
+  try{
+    const body = { baseUrl: document.getElementById('gusBaseUrl').value, appId: document.getElementById('gusAppId').value };
+    const secret = document.getElementById('gusAppSecret').value;
+    if(secret) body.appSecret = secret;
+    await api('/api/gus/settings', {method:'PUT', body: JSON.stringify(body)});
+    toast('Connection settings saved');
+    renderGusSettings();
+  } catch(err){ toast('Failed: '+err.message); }
 });
-async function renderAdmins(){
-  const list = document.getElementById('adminList');
+document.getElementById('disableGusBtn').addEventListener('click', async ()=>{
+  const confirmationPhrase = document.getElementById('disableConfirmPhrase').value;
+  const currentPassword = document.getElementById('disableCurrentPassword').value;
+  const reason = document.getElementById('disableReason').value;
+  if(!confirm('Really disable GUS? Local accounts will become the only way to sign in.')) return;
+  try{
+    await api('/api/gus/settings', {method:'PUT', body: JSON.stringify({ enabled:false, confirmationPhrase, currentPassword, reason })});
+    toast('GUS disabled');
+    document.getElementById('disableConfirmPhrase').value = '';
+    document.getElementById('disableCurrentPassword').value = '';
+    document.getElementById('disableReason').value = '';
+    renderGusSettings();
+  } catch(err){ toast('Failed: '+err.message); }
+});
+document.getElementById('enableGusBtn').addEventListener('click', async ()=>{
+  try{
+    await api('/api/gus/settings', {method:'PUT', body: JSON.stringify({ enabled:true })});
+    toast('GUS re-enabled');
+    renderGusSettings();
+  } catch(err){ toast('Failed: '+err.message); }
+});
+
+async function renderGusRoster(){
+  const list = document.getElementById('gusRosterList');
   list.innerHTML = `<div class="empty-state">Loading...</div>`;
   try{
-    const admins = await api('/api/admins');
-    if(admins.length===0){ list.innerHTML = `<div class="empty-state">No administrators yet.</div>`; return; }
+    const roster = await api('/api/gus/roster');
+    if(roster.length===0){ list.innerHTML = `<div class="empty-state">No GUS accounts seen yet — they'll appear here after their first sign-in, or once you stage a grant for them above.</div>`; return; }
     list.innerHTML = '';
-    admins.forEach(a=>{
+    roster.forEach(u=>{
+      const key = u.uid || u.username;
       const row = document.createElement('div');
       row.className = 'row-card';
+      const grantSummary = [
+        u.permissions && u.permissions.extraTabs && u.permissions.extraTabs.length ? u.permissions.extraTabs.map(t=>PERMISSION_TAB_LABELS[t]||t).join(', ') : null,
+        u.permissions && u.permissions.powerActions ? 'Power actions' : null,
+      ].filter(Boolean).join(' + ') || 'No extra grants';
       row.innerHTML = `
         <div class="row-left">
-          <div class="avatar">${a.username.slice(0,2).toUpperCase()}</div>
-          <div><div class="row-title">${a.username}</div><div class="row-sub"><span class="role-badge role-${a.role}">${a.role}</span></div></div>
+          <div class="avatar">${escapeHtml((u.username||'?').slice(0,2).toUpperCase())}</div>
+          <div>
+            <div class="row-title">${escapeHtml(u.username)}${u.pending?' <span class="badge off">PENDING FIRST LOGIN</span>':''}${u.disabled?' <span class="badge off" style="color:var(--red);">DISABLED</span>':''}</div>
+            <div class="row-sub">${u.role ? `<span class="role-badge role-${u.role}">${u.role}</span>` : 'role unknown until first login'} · ${escapeHtml(grantSummary)}</div>
+          </div>
         </div>
         <div class="row-actions">
-          <button class="btn btn-sm" data-act="reset">Reset Password</button>
+          <button class="btn btn-sm" data-act="perms">Permissions</button>
+          <button class="btn btn-sm" data-act="toggle-disable">${u.disabled ? 'Re-enable' : 'Disable here'}</button>
           <button class="btn btn-sm btn-danger" data-act="remove">Remove</button>
         </div>`;
-      row.querySelector('[data-act="reset"]').addEventListener('click', async ()=>{
-        const newPass = prompt(`New password for "${a.username}" (leave blank to auto-generate):`, '');
-        if(newPass === null) return; // cancelled
-        const password = newPass.trim() || genPassword();
-        if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
+      row.querySelector('[data-act="perms"]').addEventListener('click', ()=> openGusPermissionsDialog(u, key));
+      row.querySelector('[data-act="toggle-disable"]').addEventListener('click', async ()=>{
+        let reason = null;
+        if(!u.disabled){ reason = prompt(`Reason for disabling "${u.username}" for this app only:`, ''); if(reason===null) return; }
         try{
-          await api('/api/admins/'+encodeURIComponent(a.username), {method:'PATCH', body: JSON.stringify({password})});
-          toast(`Password for ${a.username} reset to: ${password}`);
+          await api('/api/gus/roster/'+encodeURIComponent(key)+'/disable', {method:'PUT', body: JSON.stringify({disabled: !u.disabled, reason})});
+          toast(u.disabled ? 'Re-enabled' : 'Disabled for this app');
+          renderGusRoster();
         } catch(err){ toast('Failed: '+err.message); }
       });
       row.querySelector('[data-act="remove"]').addEventListener('click', async ()=>{
-        if(!confirm('Remove administrator "'+a.username+'"?')) return;
-        try{ await api('/api/admins/'+encodeURIComponent(a.username), {method:'DELETE'}); renderAdmins(); toast('Removed'); }
+        if(!confirm(`Remove "${u.username}" from the local roster? Their GUS account is unaffected — this only clears local Fine Permissions/disable state. If they log in again, a fresh row is created.`)) return;
+        try{ await api('/api/gus/roster/'+encodeURIComponent(key), {method:'DELETE'}); renderGusRoster(); toast('Removed'); }
         catch(err){ toast('Failed: '+err.message); }
       });
       list.appendChild(row);
     });
   } catch(err){ list.innerHTML = `<div class="empty-state">${err.message}</div>`; }
 }
-document.getElementById('addAdminBtn').addEventListener('click', async ()=>{
-  const username = document.getElementById('newAdminUser').value.trim();
-  const role = document.getElementById('newAdminRole').value;
-  const password = document.getElementById('newAdminPass').value.trim() || genPassword();
-  if(!username){ toast('Enter a username'); return; }
-  if(password.length < 8){ toast('Password must be at least 8 characters'); return; }
+
+document.getElementById('stagePowerToggle').addEventListener('click', function(){ this.classList.toggle('on'); });
+document.getElementById('stageBtn').addEventListener('click', async ()=>{
+  const username = document.getElementById('stageUsername').value.trim();
+  const extraTabs = document.getElementById('stageExtraTabs').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const powerActions = document.getElementById('stagePowerToggle').classList.contains('on');
+  if(!username){ toast('Enter a GUS username'); return; }
   try{
-    await api('/api/admins', {method:'POST', body: JSON.stringify({username, password, role})});
-    toast(`Added ${username}. Password: ${password}`);
-    document.getElementById('newAdminUser').value = '';
-    document.getElementById('newAdminPass').value = genPassword();
-    renderAdmins();
+    await api('/api/gus/roster/stage', {method:'POST', body: JSON.stringify({username, extraTabs, powerActions})});
+    toast(`Staged a grant for ${username}`);
+    document.getElementById('stageUsername').value = '';
+    document.getElementById('stageExtraTabs').value = '';
+    document.getElementById('stagePowerToggle').classList.remove('on');
+    renderGusRoster();
+  } catch(err){ toast('Failed: '+err.message); }
+});
+
+function openGusPermissionsDialog(user, key){
+  const current = user.permissions || { extraTabs: [], powerActions: false };
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const checkboxes = Object.entries(PERMISSION_TAB_LABELS).map(([id,label])=>
+    `<label style="display:flex;align-items:center;gap:8px;font-size:12.8px;padding:6px 0;">
+      <input type="checkbox" data-tab="${id}" ${current.extraTabs.includes(id)?'checked':''}> ${label}
+    </label>`
+  ).join('');
+  overlay.innerHTML = `
+    <div style="width:min(420px,92vw);max-height:86vh;background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--mono);font-size:12.5px;">${escapeHtml(user.username)} — fine permissions</span>
+        <button class="btn btn-sm btn-ghost" id="permClose">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:16px;">
+        <div class="note" style="margin-bottom:14px;">Grants here are <b>in addition to</b> ${escapeHtml(user.role||'their')} role's default access — they can only add, never take away what the role already provides.</div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12.8px;padding:6px 0;margin-bottom:6px;border-bottom:1px solid var(--border-soft);">
+          <input type="checkbox" id="permPower" ${current.powerActions?'checked':''}> Power actions (Start/Restart/Stop/Kill)
+        </label>
+        ${checkboxes}
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border-soft);display:flex;justify-content:flex-end;gap:8px;">
+        <button class="btn btn-ghost" id="permCancel">Cancel</button>
+        <button class="btn btn-primary" id="permSave">Save</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  const close = ()=>overlay.remove();
+  overlay.querySelector('#permClose').addEventListener('click', close);
+  overlay.querySelector('#permCancel').addEventListener('click', close);
+  overlay.querySelector('#permSave').addEventListener('click', async ()=>{
+    const extraTabs = Array.from(overlay.querySelectorAll('[data-tab]')).filter(el=>el.checked).map(el=>el.dataset.tab);
+    const powerActions = overlay.querySelector('#permPower').checked;
+    try{
+      await api('/api/gus/roster/'+encodeURIComponent(key)+'/permissions', {method:'PUT', body: JSON.stringify({extraTabs, powerActions})});
+      toast('Permissions updated');
+      close();
+      renderGusRoster();
+    } catch(err){ toast('Failed: '+err.message); }
+  });
+}
+
+/* ---------- USER HISTORY ---------- */
+async function renderUserHistory(){
+  const body = document.getElementById('userHistoryBody');
+  body.innerHTML = `<tr><td colspan="3" style="color:var(--text-faint);padding:22px 10px;text-align:center;">Loading...</td></tr>`;
+  try{
+    const { activity } = await api('/api/user-history');
+    if(activity.length===0){ body.innerHTML = `<tr><td colspan="3" style="color:var(--text-faint);padding:22px 10px;text-align:center;">No history yet.</td></tr>`; return; }
+    body.innerHTML = activity.map(e=>`
+      <tr>
+        <td class="file-meta">${fmtDate(e.time)}</td>
+        <td class="file-meta">${e.type}</td>
+        <td>${escapeHtml(e.message)}</td>
+      </tr>`).join('');
+  } catch(err){ body.innerHTML = `<tr><td colspan="3" style="color:var(--red);padding:22px 10px;text-align:center;">${err.message}</td></tr>`; }
+
+  try{
+    const { count } = await api('/api/failed-logins/count');
+    const ticker = document.getElementById('failedLoginTicker');
+    ticker.textContent = `${count} failed attempt${count===1?'':'s'} (24h)`;
+    ticker.className = 'badge ' + (count > 0 ? 'off' : 'off');
+    ticker.style.color = count > 0 ? 'var(--red)' : '';
+  } catch(err){}
+}
+document.getElementById('failedLoginTicker').addEventListener('click', openFailedLoginsDialog);
+
+async function openFailedLoginsDialog(){
+  let entries;
+  try{ entries = await api('/api/failed-logins'); }
+  catch(err){ toast('Could not load failed logins: '+err.message); return; }
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  const rows = entries.length === 0
+    ? `<tr><td colspan="4" style="color:var(--text-faint);padding:16px;text-align:center;">No failed attempts recorded.</td></tr>`
+    : entries.map(e=>`
+      <tr>
+        <td class="file-meta">${fmtDate(e.time)}</td>
+        <td>${escapeHtml(e.username || '(blank)')}</td>
+        <td class="file-meta">${escapeHtml(e.ip)}</td>
+        <td class="file-meta" style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeAttr(e.userAgent)}">${escapeHtml(e.userAgent || '—')}</td>
+      </tr>`).join('');
+  overlay.innerHTML = `
+    <div style="width:min(760px,92vw);max-height:80vh;background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border-soft);display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-family:var(--mono);font-size:12.5px;">Failed sign-in attempts</span>
+        <button class="btn btn-sm btn-ghost" id="failedClose">✕</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;">
+        <table class="file-table">
+          <thead><tr><th>Time</th><th>Username tried</th><th>IP address</th><th>User agent</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('#failedClose').addEventListener('click', ()=>overlay.remove());
+}
+
+/* ---------- THEME ---------- */
+function applyTheme(theme){
+  const t = theme || 'ember';
+  document.documentElement.setAttribute('data-theme', t !== 'ember' ? t : '');
+  const picker = document.getElementById('themePicker');
+  if(picker) picker.value = t;
+  updateThemeSwatches();
+}
+function updateThemeSwatches(){
+  const wrap = document.getElementById('themeSwatchPreview');
+  if(!wrap) return;
+  const cs = getComputedStyle(document.documentElement);
+  wrap.querySelectorAll('[data-swatch]').forEach(el=>{
+    el.style.background = cs.getPropertyValue('--'+el.dataset.swatch).trim();
+  });
+}
+document.getElementById('themePicker').addEventListener('change', async (e)=>{
+  const theme = e.target.value;
+  applyTheme(theme);
+  try{ await api('/api/account', {method:'PUT', body: JSON.stringify({theme})}); }
+  catch(err){ toast('Could not save theme: '+err.message); }
+});
+
+/* ---------- FORCED PASSWORD CHANGE ---------- */
+function showForcedPasswordChange(){
+  document.getElementById('forcedChangeScreen').style.display = 'flex';
+  document.getElementById('forcedChangeError').classList.remove('show');
+}
+function hideForcedPasswordChange(){
+  document.getElementById('forcedChangeScreen').style.display = 'none';
+}
+document.getElementById('forcedChangeSubmit').addEventListener('click', async ()=>{
+  const newPassword = document.getElementById('forcedNewPassword').value;
+  const confirmPassword = document.getElementById('forcedConfirmPassword').value;
+  const errEl = document.getElementById('forcedChangeError');
+  if(!newPassword || newPassword.length < 8){ errEl.textContent = 'New password must be at least 8 characters'; errEl.classList.add('show'); return; }
+  if(newPassword !== confirmPassword){ errEl.textContent = 'Passwords do not match'; errEl.classList.add('show'); return; }
+  try{
+    await api('/api/account/password', { method:'PUT', body: JSON.stringify({ newPassword, confirmPassword }) });
+    document.getElementById('forcedNewPassword').value = '';
+    document.getElementById('forcedConfirmPassword').value = '';
+    hideForcedPasswordChange();
+    toast('Password changed');
+    // Refresh session state so nav/permissions reflect the now-cleared flag.
+    const s = await api('/api/session');
+    applySession(s);
+  } catch(err){
+    errEl.textContent = err.message;
+    errEl.classList.add('show');
+  }
+});
+document.getElementById('forcedChangeLogout').addEventListener('click', async ()=>{
+  try{ await api('/api/logout', { method:'POST' }); } catch(e){}
+  hideForcedPasswordChange();
+  appShell.style.display = 'none';
+  loginScreen.style.display = 'flex';
+});
+
+/* ---------- DISABLED-ACCOUNT MID-SESSION HANDLING ---------- */
+let disabledLogoutInFlight = false;
+async function forceLogoutDisabled(message){
+  if(disabledLogoutInFlight) return;
+  disabledLogoutInFlight = true;
+  if(liveSocket){ liveSocket.close(); liveSocket = null; }
+  appShell.style.display = 'none';
+  if(serverPickerScreen) serverPickerScreen.style.display = 'none';
+  hideForcedPasswordChange();
+  loginScreen.style.display = 'flex';
+  loginError.textContent = message || 'This account has been disabled.';
+  loginError.classList.add('show');
+  setTimeout(()=>{ disabledLogoutInFlight = false; }, 500);
+}
+
+/* ---------- MY ACCOUNT ---------- */
+function updateAccountAvatarSidebar(){
+  const img = new Image();
+  img.onload = ()=>{
+    document.getElementById('sessionAvatar').innerHTML = `<img src="/api/account/avatar/${encodeURIComponent(currentUsername)}?_=${Date.now()}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;">`;
+  };
+  img.onerror = ()=>{ document.getElementById('sessionAvatar').textContent = currentUsername.slice(0,2).toUpperCase(); };
+  img.src = `/api/account/avatar/${encodeURIComponent(currentUsername)}?_=${Date.now()}`;
+}
+async function renderAccount(){
+  let profile;
+  try{ profile = await api('/api/account'); }
+  catch(err){ toast('Could not load account: '+err.message); return; }
+
+  document.getElementById('acctFullName').value = profile.fullName || '';
+  document.getElementById('acctDescription').value = profile.description || '';
+  applyTheme(profile.theme || 'ember');
+
+  document.getElementById('acctHeroUsername').textContent = currentUsername;
+  const roleBadge = document.getElementById('acctHeroRoleBadge');
+  roleBadge.textContent = currentRole;
+  roleBadge.className = 'role-badge role-' + currentRole;
+
+  const preview = document.getElementById('acctAvatarPreview');
+  if(profile.avatarExt){
+    preview.innerHTML = `<img src="/api/account/avatar/${encodeURIComponent(currentUsername)}?_=${Date.now()}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
+  } else {
+    preview.innerHTML = '';
+    preview.textContent = currentUsername.slice(0,2).toUpperCase();
+  }
+
+  const cannotChange = !!profile.cannotChangePassword;
+  document.getElementById('acctPasswordFields').style.display = cannotChange ? 'none' : '';
+  document.getElementById('acctCannotChangeNote').style.display = cannotChange ? '' : 'none';
+  // A forced change doesn't need the current password — hide that field
+  // in that case (the forced-change overlay handles that flow anyway, but
+  // someone could also land here directly).
+  document.getElementById('acctCurrentPasswordField').style.display = profile.mustChangePassword ? 'none' : '';
+}
+document.getElementById('acctSaveProfileBtn').addEventListener('click', async ()=>{
+  try{
+    await api('/api/account', { method:'PUT', body: JSON.stringify({
+      fullName: document.getElementById('acctFullName').value,
+      description: document.getElementById('acctDescription').value,
+    })});
+    toast('Profile saved');
+  } catch(err){ toast('Failed: '+err.message); }
+});
+document.getElementById('acctChangePasswordBtn').addEventListener('click', async ()=>{
+  const currentPassword = document.getElementById('acctCurrentPassword').value;
+  const newPassword = document.getElementById('acctNewPassword').value;
+  const confirmPassword = document.getElementById('acctConfirmPassword').value;
+  if(!newPassword || newPassword.length < 8){ toast('New password must be at least 8 characters'); return; }
+  if(newPassword !== confirmPassword){ toast('New password and confirmation do not match'); return; }
+  try{
+    await api('/api/account/password', { method:'PUT', body: JSON.stringify({ currentPassword, newPassword, confirmPassword }) });
+    toast('Password changed');
+    document.getElementById('acctCurrentPassword').value = '';
+    document.getElementById('acctNewPassword').value = '';
+    document.getElementById('acctConfirmPassword').value = '';
+  } catch(err){ toast('Failed: '+err.message); }
+});
+document.getElementById('acctAvatarInput').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const formData = new FormData();
+  formData.append('file', file);
+  try{
+    const res = await fetch('/api/account/avatar', { method:'POST', body: formData, credentials:'include' });
+    if(!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+    toast('Profile picture updated');
+    renderAccount();
+    updateAccountAvatarSidebar();
+  } catch(err){ toast('Upload failed: '+err.message); }
+  e.target.value = '';
+});
+document.getElementById('acctAvatarRemoveBtn').addEventListener('click', async ()=>{
+  try{
+    await api('/api/account/avatar', { method:'DELETE' });
+    toast('Profile picture removed');
+    renderAccount();
+    updateAccountAvatarSidebar();
   } catch(err){ toast('Failed: '+err.message); }
 });
 </script>

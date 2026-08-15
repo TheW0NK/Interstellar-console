@@ -13,63 +13,50 @@ panel:
   # random before you expose the panel to anyone.
   sessionSecret: "CHANGE_ME_TO_A_RANDOM_STRING"
 
-server:
-  # "paper" or "velocity". Changes: the stop command sent on Stop/Restart
-  # ("stop" vs "shutdown"), which config file the MC Configuration tab
-  # edits (server.properties vs velocity.toml), the Hangar platform used
-  # by the Plugin Installer, and whether Player Manager shows Paper-only
-  # actions (op/ban/whitelist — Velocity doesn't have these).
-  type: "paper"
-  # Absolute path to the folder containing paper.jar (or velocity.jar), etc.
-  directory: "/path/to/your/server"
-  jarFile: "paper.jar"
-  javaBin: "java"
-  # JVM flags, applied before -jar
-  javaArgs:
-    - "-Xms4G"
-    - "-Xmx8G"
-    - "-XX:+UseG1GC"
-  # Args applied after the jar file name
-  extraArgs:
-    - "nogui"
-  # Path (relative to server.directory) where the optional Vexium Bridge
-  # companion plugin writes live TPS/MSPT/player stats. Paper-only — has
-  # no effect and isn't shown when server.type is "velocity". See /plugin
-  # in this repo for the plugin source and build instructions. If this
-  # file doesn't exist, the panel just shows "Not installed" on the TPS
-  # card — nothing else depends on it, and no console commands are ever
-  # sent for this.
-  bridgeStatsFile: "plugins/VexiumBridge/stats.json"
-
-sftp:
-  # Purely informational — this panel does not manage SFTP/SSH itself.
-  # Fill these in to match whatever SFTP/SSH server is actually running on
-  # this box (e.g. the OS's sshd). Password is intentionally not stored here.
-  host: "your.server.hostname"
-  port: 22
-  username: "your-username"
-
-backups:
-  directory: "./data/backups"
-  # Paths relative to server.directory that get included in each backup.
-  # For a Velocity proxy, you'd typically want something like:
-  #   ["velocity.toml", "forwarding.secret", "plugins"]
-  include:
-    - "world"
-    - "world_nether"
-    - "world_the_end"
-    - "plugins"
-
-schedules:
-  file: "./data/schedules.json"
+servers:
+  # Every server/proxy this panel manages lives in here now, not in this
+  # file — see config/servers.yml. Backups and schedules are automatically
+  # namespaced per server under data/backups/<id>/ and data/schedules/<id>.json,
+  # so you don't configure those paths per server either.
+  file: "./config/servers.yml"
 
 activity:
   file: "./data/activity.yml"
+
+failedLogins:
+  # IP addresses and user agents of failed sign-in attempts. Owner-only,
+  # viewable from Administrator Management -> User History.
+  file: "./data/failed-logins.yml"
+
+avatars:
+  # Where self-service profile pictures are stored, one file per username.
+  directory: "./data/avatars"
 
 branding:
   # Server display name and icon shown in the panel. Editable from the
   # MC Configuration tab, or by hand here / in branding.yml.
   file: "./config/branding.yml"
 
+updates:
+  # Checks github.com/TheW0NK/Interstellar-console/releases and compares
+  # against the "version" field in branding.yml. Owners get a notice on
+  # login if a newer release exists. Never blocks login on failure.
+  checkForUpdates: true
+  # Prereleases (e.g. betas) are ignored by default — only a newer
+  # *stable* release triggers the notice. Set true to also be notified
+  # about prereleases.
+  includePrereleases: false
+
 users:
+  # Local accounts — kept as a dormant fallback for genuine emergencies
+  # (GUS unreachable). Not the primary login path when GUS is enabled;
+  # see the login screen's "Sign in with a local account instead" link.
   file: "./config/users.yml"
+
+gus:
+  file: "./config/gus.yml"
+  # Local, per-app roster of Fine Permission overrides for GUS-authenticated
+  # accounts. GUS has no "list all users" endpoint for apps — this file is
+  # built up as people actually log in, not pre-populated. Role is always
+  # read from GUS at login time (read-only here, never edited locally).
+  usersFile: "./config/gus-users.yml"

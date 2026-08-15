@@ -7,6 +7,11 @@
 # The logo is read automatically from server-icon.png in your server
 # directory (the same 64x64 icon Minecraft shows in the multiplayer list)
 # — there's nothing to configure for that, just drop the file in.
+#
+# "version" drives the update checker (Administrator Management -> owners
+# see a notice on login if GitHub has a newer release). Bump this by hand
+# each time you cut a new release — it's not touched automatically.
 # =============================================================================
 
 serverName: "My Minecraft Server"
+version: "1.6.0"
