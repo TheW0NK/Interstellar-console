@@ -192,7 +192,7 @@ body{
 .btn{
   font-family:var(--sans);
   font-size:12.5px;font-weight:600;
-  padding:8px 14px;border-radius:7px;
+  min-height:36px;padding:8px 14px;border-radius:7px;
   border:1px solid var(--border);
   background:var(--surface-2);
   color:var(--text);
@@ -206,7 +206,7 @@ body{
 .btn-danger{background:transparent;color:var(--red);border-color:rgba(229,89,94,.4);}
 .btn-danger:hover{background:rgba(229,89,94,.1);}
 .btn-ghost{background:transparent;}
-.btn-sm{padding:5px 10px;font-size:11.5px;}
+.btn-sm{min-height:32px;padding:5px 10px;font-size:11.5px;}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
 
 .console-wrap{
@@ -330,7 +330,7 @@ body{
 .field label{font-size:11.5px;color:var(--text-dim);font-weight:600;}
 .field input[type=text],.field input[type=number],.field select{
   background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
-  padding:9px 11px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;
+  width:100%;min-height:38px;padding:9px 11px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;
 }
 .field input:focus,.field select:focus{border-color:var(--ember-dim);}
 .field-row-toggle{
@@ -433,12 +433,13 @@ body{
 .role-owner{background:rgba(255,138,61,.14);color:var(--ember);}
 .role-admin{background:rgba(229,89,94,.14);color:var(--red);}
 .role-moderator{background:rgba(91,157,217,.14);color:var(--blue);}
-.admin-form{display:grid;grid-template-columns:1.3fr 1fr 1fr auto;gap:10px;align-items:end;margin-bottom:16px;}
+.admin-form{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,1fr) minmax(140px,1fr) auto;gap:10px;align-items:end;margin-bottom:16px;}
 .admin-form .field label{font-size:11px;}
 .admin-form input, .admin-form select{
   background:var(--surface-2);border:1px solid var(--border);border-radius:7px;
-  padding:9px 11px;color:var(--text);font-size:12.8px;font-family:var(--mono);outline:none;width:100%;
+  width:100%;min-height:38px;padding:9px 11px;color:var(--text);font-size:12.8px;font-family:var(--mono);outline:none;
 }
+.admin-form > .btn{height:38px;white-space:nowrap;}
 .dash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;}
 .dash-stat{padding:15px 16px;}
 .dash-stat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -537,11 +538,51 @@ body{
 }
 @keyframes toastin{from{opacity:0;transform:translateX(12px);}to{opacity:1;transform:translateX(0);}}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;display:flex;align-items:center;justify-content:center;}
-.modal-box{width:min(420px,90vw);background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;padding:20px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:150;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto;}
+.modal-box{width:min(420px,100%);max-height:calc(100vh - 32px);overflow-y:auto;background:var(--surface);border:1px solid var(--border-soft);border-radius:12px;padding:20px;}
 .modal-box h3{font-size:14.5px;margin-bottom:14px;}
 .modal-box .field{margin-bottom:12px;}
-.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;flex-wrap:wrap;}
+
+@media (max-width:1100px){
+  .topbar{align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  .topbar-left{min-width:0;flex-wrap:wrap;}
+  .topbar-stats{margin-left:auto;}
+  .dash-grid{grid-template-columns:repeat(2,1fr);}
+  .config-grid{grid-template-columns:1fr;}
+  .admin-form{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .admin-form > .btn{width:100%;}
+}
+
+@media (max-width:760px){
+  body{height:auto;min-height:100vh;overflow:auto;}
+  #appShell{height:auto;min-height:100vh;flex-direction:column;}
+  .sidebar{width:100%;min-width:0;padding:12px;}
+  .brand{padding-bottom:12px;margin-bottom:10px;}
+  .nav{flex-direction:row;overflow-x:auto;flex:none;gap:4px;padding-bottom:4px;}
+  .nav-item{flex:0 0 auto;padding:9px 10px;}
+  .sidebar-foot{margin-top:10px;}
+  .session-row{margin-top:10px;}
+  .topbar{padding:14px 16px;}
+  .topbar-left{width:100%;}
+  .topbar-stats{width:100%;justify-content:space-between;gap:10px;margin-left:0;}
+  .content{padding:16px 14px 10px;overflow:visible;}
+  .section-head{align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .section-head > :last-child{width:100%;}
+  .section-head > button{width:100%;}
+  .dash-grid,.dash-cols,.sftp-grid{grid-template-columns:1fr;}
+  .admin-form{grid-template-columns:1fr;}
+  .admin-form > .btn{width:100%;}
+  .row-card{align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .row-actions{width:100%;flex-wrap:wrap;}
+  .row-actions .btn{flex:1;}
+  .broadcast-row,.console-input-row{flex-wrap:wrap;}
+  .broadcast-row input,.console-input-row input{width:100%;min-height:38px;}
+  .broadcast-row .btn,.console-input-row .btn{width:100%;justify-content:center;}
+  .resfoot{grid-template-columns:1fr;padding:12px 14px 14px;}
+  .login-card{width:min(360px,calc(100vw - 28px));padding:24px 20px 22px;}
+  .login-card[style]{width:min(460px,calc(100vw - 28px)) !important;}
+}
 </style>
 </head>
 <body>
@@ -558,7 +599,7 @@ body{
       <div class="brand-text"><b class="brand-name">Server</b><span>Server Control</span></div>
     </div>
     <h2>Sign in</h2>
-    <p class="login-sub">Local/authorized access only — sign in to continue.</p>
+    <p class="login-sub">Authorized access only — sign in to continue.</p>
     <form id="loginForm" onsubmit="return false;">
       <div class="field">
         <label>Username</label>
@@ -881,7 +922,7 @@ body{
 
     <div class="panel" id="tab-admins">
       <div class="section-head">
-        <div><h2>Administrator Management</h2><p>Fine Permissions for GUS-authenticated accounts — GUS owns who exists and their password, this owns what they can touch here</p></div>
+        <div><h2>Administrator Management</h2><p>Fine Permissions for GUS-authenticated accounts — GUS manages accounts and passwords; this panel manages what they can access here</p></div>
       </div>
 
       <div class="card" style="margin-bottom:16px;">
@@ -892,7 +933,7 @@ body{
           <div class="field field-row-toggle" style="align-self:end;"><span>Power actions</span><div class="toggle" id="stagePowerToggle"></div></div>
           <button class="btn btn-primary" id="stageBtn">+ Stage grant</button>
         </div>
-        <div class="note" style="margin-top:12px;">Role always comes from GUS, read-only here. A staged grant resolves automatically the first time that username actually logs in — no account is created by this.</div>
+        <div class="note" style="margin-top:12px;">Roles always come from GUS and are read-only here. A staged grant resolves automatically the first time that username logs in; this does not create an account.</div>
       </div>
 
       <div class="list" id="gusRosterList" style="margin-bottom:16px;"><div class="empty-state">No accounts seen yet.</div></div>
@@ -910,15 +951,15 @@ body{
       <div class="card" id="disableGusCard" style="border-color:rgba(229,89,94,.35);">
         <div style="font-size:12.8px;font-weight:600;margin-bottom:6px;color:var(--red);">Disable GUS</div>
         <div class="note" style="margin-bottom:14px;">
-          GUS is meaningfully more secure than local accounts (centrally managed password policy, cross-app
-          session revocation, IP-scoped lockout). This is a deliberately hard switch to flip — three separate
-          checks are required, all logged. Only do this if you genuinely need to.
+          GUS is more secure than local accounts, with centrally managed password policies, cross-app session
+          revocation, and IP-scoped lockouts. Disabling it requires three separate checks, all of which are logged.
+          Continue only if you genuinely need to.
         </div>
         <div id="gusEnabledStatus" style="font-size:12.5px;margin-bottom:14px;">—</div>
         <div id="disableGusForm" style="display:flex;flex-direction:column;gap:12px;max-width:420px;">
           <div class="field"><label>Type "DISABLE GUS" to confirm</label><input type="text" id="disableConfirmPhrase" placeholder="DISABLE GUS"></div>
           <div class="field"><label>Your current password</label><input type="password" id="disableCurrentPassword"></div>
-          <div class="field"><label>Reason (required, min. 10 characters)</label><input type="text" id="disableReason" placeholder="Why are you disabling GUS?"></div>
+          <div class="field"><label>Reason (required, at least 10 characters)</label><input type="text" id="disableReason" placeholder="Why are you disabling GUS?"></div>
           <button class="btn btn-danger" id="disableGusBtn" style="align-self:flex-start;">Disable GUS</button>
         </div>
         <button class="btn btn-primary" id="enableGusBtn" style="display:none;">Re-enable GUS</button>
@@ -1025,7 +1066,7 @@ body{
     </div>
     <div class="res-card">
       <div class="res-top">
-        <span class="res-label"><span class="res-dot" style="background:var(--green)"></span>Disc Usage</span>
+        <span class="res-label"><span class="res-dot" style="background:var(--green)"></span>Disk Usage</span>
         <div class="res-right"><div class="res-now" id="diskText">—</div><div class="res-sub" id="diskSub">—</div></div>
       </div>
       <canvas class="res-graph" id="diskGraph"></canvas>
@@ -1271,7 +1312,7 @@ document.getElementById('toggleLocalAuthLink').addEventListener('click', (e)=>{
   link.textContent = useLocalAuth ? 'Use GUS instead' : 'Sign in with a local account instead';
   document.querySelector('.login-sub').textContent = useLocalAuth
     ? 'Local account mode — for emergencies when GUS is unreachable.'
-    : 'Local/authorized access only — sign in to continue.';
+    : 'Authorized access only — sign in to continue.';
 });
 
 async function attemptLogin(){

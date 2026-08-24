@@ -16,6 +16,6 @@
 # =============================================================================
 
 enabled: true
-baseUrl: "http://127.0.0.1:4000"
-appId: "CHANGE_ME"
-appSecret: "CHANGE_ME"
+baseUrl: "https://ideal-space-acorn-g4qq7g65pqg939rrj-9200.app.github.dev/"
+appId: "0325264c-550e-477d-88c2-9f6652f39cf6"
+appSecret: "sk_QVadSM4y2NgulgOZAghjse5eWDOcpibKOJfWJ10HsHM"

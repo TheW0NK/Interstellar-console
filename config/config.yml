@@ -7,7 +7,7 @@ panel:
   # Interface to bind the web server to. Keep this 127.0.0.1 unless you're
   # putting a reverse proxy in front of it, or you actually want it reachable
   # over the LAN.
-  bind: "127.0.0.1"
+  bind: "0.0.0.0"
   port: 8080
   # Random string used to sign session cookies. Change this to something
   # random before you expose the panel to anyone.
