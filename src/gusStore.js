@@ -4,6 +4,25 @@ const yaml = require('js-yaml');
 const { effectivePermissions } = require('./permissions');
 
 /* ---------- GUS connection settings (config/gus.yml) ---------- */
+
+/**
+ * gus.yml is often hand-edited, which skips the http(s):// check the
+ * settings page enforces. A bare host ("passport.example.com") makes
+ * fetch() throw "Invalid URL" before any request is sent, which used to
+ * surface only as "Could not reach GUS". Default bare hosts to https://
+ * (http:// for localhost/127.0.0.1, matching the dev default) and strip
+ * trailing slashes.
+ */
+function normalizeBaseUrl(raw) {
+  let url = String(raw || '').trim();
+  if (!url) return 'http://127.0.0.1:4000';
+  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(url)) {
+    const isLocal = /^(localhost|127\.|\[?::1\]?)/i.test(url);
+    url = (isLocal ? 'http://' : 'https://') + url;
+  }
+  return url.replace(/\/+$/, '');
+}
+
 class GusSettingsStore {
   constructor(filePath) {
     this.filePath = filePath;
@@ -14,7 +33,7 @@ class GusSettingsStore {
       const doc = yaml.load(fs.readFileSync(this.filePath, 'utf8')) || {};
       return {
         enabled: doc.enabled !== false, // on by default
-        baseUrl: doc.baseUrl || 'http://127.0.0.1:4000',
+        baseUrl: normalizeBaseUrl(doc.baseUrl),
         appId: doc.appId || '',
         appSecret: doc.appSecret || '',
       };
@@ -207,4 +226,4 @@ class GusUserStore {
   }
 }
 
-module.exports = { GusSettingsStore, GusUserStore };
+module.exports = { normalizeBaseUrl, GusSettingsStore, GusUserStore };

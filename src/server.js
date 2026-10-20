@@ -136,6 +136,7 @@ async function handleGusLogin(req, res, username, password) {
   try {
     call = await gusClient.login(username, password);
   } catch (err) {
+    console.error('[gus] login call failed:', err.message, err.cause ? `(${err.cause.code || err.cause.message})` : '');
     // GUS unreachable — do not silently fall back to local (that would
     // undermine the whole point of GUS being the secure default). Surface
     // a clear error; the explicit local-account link on the login screen

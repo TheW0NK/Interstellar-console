@@ -34,7 +34,9 @@ class GusClient {
         signal: controller.signal,
       });
     } catch (err) {
-      const e = new Error('Could not reach GUS: ' + err.message);
+      const detail = err.name === 'AbortError' ? `timed out after ${TIMEOUT_MS}ms` : err.message;
+      const e = new Error(`Could not reach GUS at ${url}: ${detail}`);
+      e.cause = err.cause || err;
       e.gusUnreachable = true;
       throw e;
     } finally {
