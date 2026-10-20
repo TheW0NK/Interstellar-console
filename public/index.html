@@ -52,6 +52,31 @@
   --ember:#D9731A; --ember-dim:#F0C6A0;
   --green:#1E9E6D; --red:#D93A3A; --yellow:#C89A1E; --blue:#2E7BC4;
 }
+/* Passport themes — same ids and accent colors as Passport's own palette,
+   so a theme picked in Passport (or any other Prismonian app) looks the
+   same here. Keep the id list in sync with src/themes.js. */
+[data-theme="purple"]{
+  --bg:#120A1C; --surface:#1C1030; --surface-2:#241541; --surface-3:#2D1B50;
+  --border:#4A3570; --border-soft:#33244F;
+  --text:#F3EEFC; --text-dim:#C3B0DD; --text-faint:#8A76AB;
+  --ember:#B478F0; --ember-dim:#5E3E8A;
+  --green:#7FDCB8; --red:#F07871; --yellow:#EEC35C; --blue:#83B8E6;
+}
+/* The "sharp" family: pure black, maximum border-vs-surface contrast. */
+[data-theme="blueSharp"]{
+  --bg:#000000; --surface:#0A0A0A; --surface-2:#111111; --surface-3:#1A1A1A;
+  --border:#FFFFFF; --border-soft:#666666;
+  --text:#FFFFFF; --text-dim:#CCCCCC; --text-faint:#999999;
+  --ember:#00E5FF; --ember-dim:#007A88;
+  --green:#00FF85; --red:#FF3B3B; --yellow:#FFE135; --blue:#00E5FF;
+}
+[data-theme="purpleSharp"]{
+  --bg:#000000; --surface:#0A0A0A; --surface-2:#111111; --surface-3:#1A1A1A;
+  --border:#FFFFFF; --border-soft:#666666;
+  --text:#FFFFFF; --text-dim:#CCCCCC; --text-faint:#999999;
+  --ember:#B45CFF; --ember-dim:#6A2F9E;
+  --green:#00FF85; --red:#FF3B3B; --yellow:#FFE135; --blue:#B45CFF;
+}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
 body{
@@ -388,7 +413,7 @@ body{
 
 .login-screen{
   position:fixed;inset:0;z-index:200;
-  background:radial-gradient(circle at 30% 20%, #1a1410 0%, var(--bg) 55%);
+  background:radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--ember) 9%, var(--bg)) 0%, var(--bg) 55%);
   display:flex;align-items:center;justify-content:center;
 }
 .login-card{
@@ -430,9 +455,7 @@ body{
 .logout-btn:hover{color:var(--red);border-color:rgba(229,89,94,.4);}
 
 .role-badge{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px;}
-.role-owner{background:rgba(255,138,61,.14);color:var(--ember);}
-.role-admin{background:rgba(229,89,94,.14);color:var(--red);}
-.role-moderator{background:rgba(91,157,217,.14);color:var(--blue);}
+.role-badge{--rank:var(--ember);background:color-mix(in srgb, var(--rank) 14%, transparent);color:var(--rank);}
 .admin-form{display:grid;grid-template-columns:minmax(220px,1.3fr) minmax(170px,1fr) minmax(140px,1fr) auto;gap:10px;align-items:end;margin-bottom:16px;}
 .admin-form .field label{font-size:11px;}
 .admin-form input, .admin-form select{
@@ -933,7 +956,7 @@ body{
           <div class="field field-row-toggle" style="align-self:end;"><span>Power actions</span><div class="toggle" id="stagePowerToggle"></div></div>
           <button class="btn btn-primary" id="stageBtn">+ Stage grant</button>
         </div>
-        <div class="note" style="margin-top:12px;">Roles always come from GUS and are read-only here. A staged grant resolves automatically the first time that username logs in; this does not create an account.</div>
+        <div class="note" style="margin-top:12px;">Ranks always come from Passport and are read-only here. A staged grant resolves automatically the first time that username logs in; this does not create an account.</div>
       </div>
 
       <div class="list" id="gusRosterList" style="margin-bottom:16px;"><div class="empty-state">No accounts seen yet.</div></div>
@@ -997,7 +1020,7 @@ body{
         <div class="acct-hero-info">
           <div class="acct-hero-name-row">
             <span id="acctHeroUsername" class="acct-hero-username">—</span>
-            <span id="acctHeroRoleBadge" class="role-badge role-owner">—</span>
+            <span id="acctHeroRoleBadge" class="role-badge">—</span>
           </div>
           <button class="btn btn-sm btn-ghost" id="acctAvatarRemoveBtn" style="align-self:flex-start;margin-top:4px;">Remove picture</button>
         </div>
@@ -1022,6 +1045,9 @@ body{
               <option value="ocean">Ocean</option>
               <option value="forest">Forest</option>
               <option value="light">Light</option>
+              <option value="purple">Purple</option>
+              <option value="blueSharp">Blue Sharp</option>
+              <option value="purpleSharp">Purple Sharp</option>
             </select>
           </div>
           <div class="acct-theme-swatches" id="themeSwatchPreview">
@@ -1042,7 +1068,7 @@ body{
         </div>
         <div style="margin-top:14px;"><button class="btn btn-primary btn-sm" id="acctChangePasswordBtn">Change password</button></div>
         <div class="note" id="acctCannotChangeNote" style="display:none;margin-top:14px;">
-          <b>This account cannot change its own password.</b> Ask an owner to reset it from Administrator Management.
+          <b>This account cannot change its own password.</b> Ask a Sysadmin to reset it from Administrator Management.
         </div>
       </div>
     </div>
@@ -1160,17 +1186,47 @@ const loginCard = document.querySelector('.login-card');
 const loginUserInput = document.getElementById('loginUser');
 const loginPassInput = document.getElementById('loginPass');
 let currentRole = null;
+let currentRank = null;
+
+/* Ranks come from Passport (formerly GAM / GUS) — its label and color are
+   used when it sends them, so custom ranks render with their real name. */
+const RANK_FALLBACK = {
+  trustedInstaller:    { label:'Provider',       color:'#5b9dd9' },
+  systemAdministrator: { label:'Sysadmin',       color:'#ff8a3d' },
+  elevatedStaff:       { label:'ElevatedAdmins', color:'#a58bd9' },
+  staff:               { label:'StaffUsers',     color:'#8b93a1' },
+};
+const LEGACY_ROLE_ALIASES = { owner:'systemAdministrator', admin:'elevatedStaff', moderator:'staff' };
+function resolveRank(role, rank){
+  const name = LEGACY_ROLE_ALIASES[role] || role;
+  const fb = RANK_FALLBACK[name] || {};
+  const color = rank && /^#[0-9a-f]{6}$/i.test(rank.color||'') ? rank.color : (fb.color || null);
+  return { name, label: (rank && rank.label) || fb.label || name || '—', color };
+}
+function applyRankBadge(el, role, rank){
+  const r = resolveRank(role, rank);
+  el.textContent = r.label;
+  el.className = 'role-badge';
+  el.title = r.name || '';
+  if(r.color) el.style.setProperty('--rank', r.color); else el.style.removeProperty('--rank');
+}
+function rankBadgeHtml(role, rank){
+  const r = resolveRank(role, rank);
+  const style = r.color ? ` style="--rank:${r.color}"` : '';
+  return `<span class="role-badge"${style} title="${escapeHtml(r.name||'').replace(/"/g,'&quot;')}">${escapeHtml(r.label)}</span>`;
+}
 let serverType = 'paper';
 let currentUsername = null;
 let currentPermissions = { tabs: [], powerActions: false };
 
 function applySession(data){
   currentRole = data.role;
+  currentRank = data.rank || null;
   currentUsername = data.user;
   currentPermissions = data.permissions || { tabs: [], powerActions: false };
 
   document.getElementById('sessionUser').textContent = data.user;
-  document.getElementById('sessionRole').textContent = data.role;
+  document.getElementById('sessionRole').textContent = resolveRank(currentRole, currentRank).label;
   document.getElementById('sessionAvatar').textContent = data.user.slice(0,2).toUpperCase();
   const dashName = document.getElementById('dashUserName');
   if(dashName) dashName.textContent = data.user;
@@ -1192,7 +1248,7 @@ function applySession(data){
   else hideForcedPasswordChange();
 
   // Fire-and-forget — never let this affect login/session responsiveness.
-  // Backend already returns null for non-owners, so this is safe to call
+  // Backend already returns null for anyone below Provider/Sysadmin, so this is safe to call
   // unconditionally.
   checkForUpdate();
 }
@@ -1235,7 +1291,7 @@ async function showServerPicker(){
   appShell.style.display = 'none';
   serverPickerScreen.style.display = 'flex';
   document.getElementById('pickerSessionUser').textContent = currentUsername || '—';
-  document.getElementById('pickerSessionRole').textContent = currentRole || '—';
+  document.getElementById('pickerSessionRole').textContent = currentRole ? resolveRank(currentRole, currentRank).label : '—';
   const list = document.getElementById('serverPickerList');
   list.innerHTML = `<div class="empty-state">Loading servers...</div>`;
   try{
@@ -2321,7 +2377,7 @@ async function renderGusRoster(){
           <div class="avatar">${escapeHtml((u.username||'?').slice(0,2).toUpperCase())}</div>
           <div>
             <div class="row-title">${escapeHtml(u.username)}${u.pending?' <span class="badge off">PENDING FIRST LOGIN</span>':''}${u.disabled?' <span class="badge off" style="color:var(--red);">DISABLED</span>':''}</div>
-            <div class="row-sub">${u.role ? `<span class="role-badge role-${u.role}">${u.role}</span>` : 'role unknown until first login'} · ${escapeHtml(grantSummary)}</div>
+            <div class="row-sub">${u.role ? rankBadgeHtml(u.role, u.rankDisplay || u.rank) : 'rank unknown until first login'} · ${escapeHtml(grantSummary)}</div>
           </div>
         </div>
         <div class="row-actions">
@@ -2381,7 +2437,7 @@ function openGusPermissionsDialog(user, key){
         <button class="btn btn-sm btn-ghost" id="permClose">✕</button>
       </div>
       <div style="flex:1;overflow-y:auto;padding:16px;">
-        <div class="note" style="margin-bottom:14px;">Grants here are <b>in addition to</b> ${escapeHtml(user.role||'their')} role's default access — they can only add, never take away what the role already provides.</div>
+        <div class="note" style="margin-bottom:14px;">Grants here are <b>in addition to</b> ${user.role ? escapeHtml(resolveRank(user.role, user.rankDisplay || user.rank).label)+"'s" : 'their rank\'s'} default access — they can only add, never take away what the rank already provides.</div>
         <label style="display:flex;align-items:center;gap:8px;font-size:12.8px;padding:6px 0;margin-bottom:6px;border-bottom:1px solid var(--border-soft);">
           <input type="checkbox" id="permPower" ${current.powerActions?'checked':''}> Power actions (Start/Restart/Stop/Kill)
         </label>
@@ -2467,8 +2523,10 @@ async function openFailedLoginsDialog(){
 }
 
 /* ---------- THEME ---------- */
+const THEMES = ['ember','ocean','forest','light','purple','blueSharp','purpleSharp'];
 function applyTheme(theme){
-  const t = theme || 'ember';
+  if(theme === 'sharp') theme = 'blueSharp';
+  const t = THEMES.includes(theme) ? theme : 'ember';
   document.documentElement.setAttribute('data-theme', t !== 'ember' ? t : '');
   const picker = document.getElementById('themePicker');
   if(picker) picker.value = t;
@@ -2559,8 +2617,7 @@ async function renderAccount(){
 
   document.getElementById('acctHeroUsername').textContent = currentUsername;
   const roleBadge = document.getElementById('acctHeroRoleBadge');
-  roleBadge.textContent = currentRole;
-  roleBadge.className = 'role-badge role-' + currentRole;
+  applyRankBadge(roleBadge, currentRole, currentRank);
 
   const preview = document.getElementById('acctAvatarPreview');
   if(profile.avatarExt){

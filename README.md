@@ -152,22 +152,44 @@ command) either by hand in that file or from Administrator Management.
   password policy, cross-app session revocation, IP-scoped lockout), and
   disabling it shouldn't be a casual toggle.
 
-## Roles, permissions, and account security
+## Ranks, permissions, and account security
 
-Three roles, each with a default set of tabs:
+Ranks match Passport's (formerly GAM / GUS) built-in ranks exactly, so a
+Passport account's rank applies here with no mapping to maintain:
 
-- **Owner** — everything, including Administrator Management (user list,
-  the "More" profile dialog, Fine Permissions, and User History all live
-  behind that one tab).
-- **Admin** — everything except Administrator Management: Dashboard,
-  Console, Files, Backups, Schedules, Quick Tasks, MC Configuration,
-  Installed Plugins, Plugin Installer, Player Manager, SFTP Info.
-- **Moderator** — Dashboard, Console, Quick Tasks, Player Manager. No
-  Start/Restart/Stop/Kill — moderators can see the server's state and use
-  the console, but can't take the process down.
+- **Provider** (`trustedInstaller`) and **Sysadmin** (`systemAdministrator`,
+  formerly *Owner*) — everything, including Administrator Management
+  (user list, the "More" profile dialog, Fine Permissions, and User
+  History all live behind that one tab), plus the update banner.
+- **ElevatedAdmins** (`elevatedStaff`, formerly *Admin*) — everything
+  except Administrator Management: Dashboard, Console, Files, Backups,
+  Schedules, Quick Tasks, MC Configuration, Installed Plugins, Plugin
+  Installer, Player Manager, SFTP Info.
+- **StaffUsers** (`staff`, formerly *Moderator*) — Dashboard, Console,
+  Quick Tasks, Player Manager. No Start/Restart/Stop/Kill — StaffUsers can
+  see the server's state and use the console, but can't take the process
+  down.
+- **Custom Passport ranks** get the defaults of the built-in rank their
+  Passport permission level reaches (≥200 → Sysadmin, ≥50 →
+  ElevatedAdmins, otherwise StaffUsers), and show up with their real
+  Passport label and color. Passport builds that don't send rank details
+  yet put every custom rank at StaffUsers — never higher.
+
+The old `owner` / `admin` / `moderator` names still work everywhere
+(existing `config/users.yml` files, `scripts/add-user.js`) and are
+converted to the new names automatically. Rank changes made in Passport
+take effect here at the next 5-minute re-validation, not just the next
+login.
+
+**Themes** are the same seven Passport offers — Ember (this panel's
+default for local accounts), Ocean, Forest, Light, Purple, Blue Sharp,
+and Purple Sharp. For Passport accounts the theme lives on the Passport
+profile: picking one here saves it to Passport, and one picked in
+Passport (or any other Prismonian app) follows you here at next sign-in
+or re-validation.
 
 **My Account** (profile, password, avatar, theme) is available to every
-role — it's not a privilege, it's just where you manage your own login.
+rank — it's not a privilege, it's just where you manage your own login.
 
 **Fine Permissions** (per-user, from Administrator Management → Permissions)
 layer on top of a user's role and can only ever *add* — a permission
@@ -283,13 +305,14 @@ logs something different at startup, the panel will just sit in
 3. **Create your first administrator**
 
    ```bash
-   node scripts/add-user.js adrian owner
+   node scripts/add-user.js adrian systemAdministrator
    ```
 
    This prompts for a password (hidden input), hashes it, and appends the
-   account to `config/users.yml`. Valid roles: `owner`, `admin`,
-   `moderator`. Only `owner`/`admin` can access Administrator Management in
-   the panel itself.
+   account to `config/users.yml`. Valid ranks: `trustedInstaller`,
+   `systemAdministrator`, `elevatedStaff`, `staff` (legacy `owner`/`admin`/
+   `moderator` still work). Only Provider/Sysadmin can access Administrator
+   Management in the panel itself.
 
 4. **Start the panel**
 
@@ -360,7 +383,8 @@ src/
   auth.js           # local user store, password policy, permission middleware
   gus.js            # GUS API client (/api/v1/* contract)
   gusStore.js       # GUS settings + local Fine Permissions roster
-  permissions.js    # role -> default tabs, effective-permission logic
+  permissions.js    # Passport rank -> default tabs, effective-permission logic
+  themes.js         # theme ids shared with Passport
   failedLogins.js   # yaml-backed failed-login tracker
   updateChecker.js  # checks GitHub releases against branding.yml's version
   stats.js          # /proc-based CPU/mem sampling

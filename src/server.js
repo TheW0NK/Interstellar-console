@@ -7,7 +7,8 @@ const { WebSocketServer } = require('ws');
 
 const { loadConfig } = require('./config');
 const { UserStore, requireAuth, requireTab, scopedTab, requirePowerAction, requireGoodStanding } = require('./auth');
-const { effectivePermissions } = require('./permissions');
+const { effectivePermissions, normalizeRole, rankInfo, isFullAccess } = require('./permissions');
+const { normalizeTheme } = require('./themes');
 const ServerRegistry = require('./servers');
 const ActivityLog = require('./activity');
 const FailedLoginStore = require('./failedLogins');
@@ -76,9 +77,12 @@ async function gusRevalidate(req, res, next) {
   try {
     const { body } = await gusClient.validate(req.session.gusToken);
     if (!body.valid) {
-      return req.session.destroy(() => res.status(401).json({ error: 'Your session was ended (possibly from another app, or by an owner).' }));
+      return req.session.destroy(() => res.status(401).json({ error: 'Your session was ended (possibly from another app, or by a Sysadmin).' }));
     }
     gusUserStore.syncProfile(body.user);
+    // A rank change in Passport takes effect here on the next revalidation,
+    // not just at the next login.
+    if (body.user && body.user.role) req.session.user.role = normalizeRole(body.user.role);
     req.session.gusLastValidated = Date.now();
     next();
   } catch (err) {
@@ -102,7 +106,7 @@ function currentPanelVersion() {
 
 if (userStore.isEmpty()) {
   console.warn('\n⚠  No administrators exist yet in ' + config.users.file);
-  console.warn('   Run: node scripts/add-user.js <username> owner\n');
+  console.warn('   Run: node scripts/add-user.js <username> systemAdministrator\n');
 }
 
 const app = express();
@@ -146,7 +150,7 @@ async function handleGusLogin(req, res, username, password) {
 
   if (httpStatus === 401 && body.status === 'invalid_app') {
     console.error('GUS rejected this panel\'s app credentials — check config/gus.yml (appId/appSecret)');
-    return res.status(503).json({ error: 'GUS integration is misconfigured. Contact an owner.' });
+    return res.status(503).json({ error: 'GUS integration is misconfigured. Contact a Sysadmin.' });
   }
   if (httpStatus === 429 || body.status === 'rate_limited') {
     if (body.retryAfterSeconds) res.set('Retry-After', String(body.retryAfterSeconds));
@@ -168,10 +172,10 @@ async function handleGusLogin(req, res, username, password) {
 
   if (roster.disabled) {
     activityLog.add('auth', `Blocked sign-in — "${gusUser.username}" is disabled for this app`, null);
-    return res.status(403).json({ error: 'This account has been disabled for Interstellar Console specifically. Contact an owner.' });
+    return res.status(403).json({ error: 'This account has been disabled for Interstellar Console specifically. Contact a Sysadmin.' });
   }
 
-  req.session.user = { username: gusUser.username, role: gusUser.role, uid: gusUser.uid, authSource: 'gus' };
+  req.session.user = { username: gusUser.username, role: roster.role, uid: gusUser.uid, authSource: 'gus' };
   req.session.gusToken = body.token;
   req.session.gusLastValidated = Date.now();
 
@@ -179,9 +183,10 @@ async function handleGusLogin(req, res, username, password) {
   res.json({
     ok: true,
     user: gusUser.username,
-    role: gusUser.role,
-    permissions: effectivePermissions({ role: gusUser.role, permissions: roster.permissions }),
-    theme: roster.theme || gusUser.theme || 'ember',
+    role: roster.role,
+    rank: rankInfo(roster.role, roster.rank),
+    permissions: effectivePermissions(roster),
+    theme: normalizeTheme(roster.theme),
     requirePasswordChange: body.status === 'good_change_pw',
     singleServerId: registry.isSingleServer() ? registry.firstId() : null,
     authSource: 'gus',
@@ -207,8 +212,9 @@ async function handleLocalLogin(req, res, username, password) {
     ok: true,
     user: result.user.username,
     role: result.user.role,
+    rank: rankInfo(result.user.role),
     permissions: effectivePermissions(fullUser),
-    theme: fullUser.theme || 'ember',
+    theme: normalizeTheme(fullUser.theme),
     requirePasswordChange: result.needsChange,
     singleServerId: registry.isSingleServer() ? registry.firstId() : null,
     authSource: 'local',
@@ -228,9 +234,10 @@ app.get('/api/session', requireAuth, (req, res) => {
   const isGus = req.session.user.authSource === 'gus';
   res.json({
     user: req.session.user.username,
-    role: req.session.user.role,
-    permissions: effectivePermissions(isGus ? { role: req.session.user.role, permissions: fullUser.permissions } : fullUser),
-    theme: fullUser.theme || 'ember',
+    role: fullUser.role,
+    rank: rankInfo(fullUser.role, fullUser.rank),
+    permissions: effectivePermissions(fullUser),
+    theme: normalizeTheme(fullUser.theme),
     requirePasswordChange: !!fullUser.mustChangePassword || (!isGus && userStore.isPasswordExpired(fullUser)),
     singleServerId: registry.isSingleServer() ? registry.firstId() : null,
     authSource: req.session.user.authSource,
@@ -248,11 +255,12 @@ app.use('/api', requireGoodStanding(identity));
 // Self-service account management — every authenticated user, every role.
 app.use('/api', accountRoutes(config, { userStore, gusUserStore, gusClient }, activityLog));
 
-// Update check — owner-only "is there a newer release" notice. Returns
-// null for non-owners or if checking is disabled/unavailable, rather than
+// Update check — full-access-only (Provider/Sysadmin) "is there a newer release" notice. Returns
+// null for everyone else or if checking is disabled/unavailable, rather than
 // erroring, so the frontend can call this unconditionally after login.
 app.get('/api/update-check', async (req, res) => {
-  if (!updateChecker || req.session.user.role !== 'owner') return res.json(null);
+  const sessionUser = identity.lookup(req.session.user);
+  if (!updateChecker || !sessionUser || !isFullAccess(sessionUser.role, sessionUser.rank)) return res.json(null);
   try {
     const result = await updateChecker.check(currentPanelVersion());
     res.json(result);

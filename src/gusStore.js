@@ -1,7 +1,8 @@
 'use strict';
 const fs = require('fs');
 const yaml = require('js-yaml');
-const { effectivePermissions } = require('./permissions');
+const { effectivePermissions, normalizeRole, rankInfo } = require('./permissions');
+const { DEFAULT_THEME, isValidTheme, normalizeTheme } = require('./themes');
 
 /* ---------- GUS connection settings (config/gus.yml) ---------- */
 class GusSettingsStore {
@@ -50,7 +51,7 @@ class GusUserStore {
 
   _defaults() {
     return {
-      theme: 'ember',
+      theme: DEFAULT_THEME,
       avatarExt: null,
       lastLogin: null,
       // Purely local/app-scoped — lets an owner block a GUS-valid account
@@ -90,7 +91,11 @@ class GusUserStore {
   }
 
   list() {
-    return this._read().users.map((u) => ({ ...u, effective: effectivePermissions({ role: u.role, permissions: u.permissions }) }));
+    return this._read().users.map((u) => ({
+      ...u,
+      rankDisplay: u.role ? rankInfo(u.role, u.rank) : null,
+      effective: effectivePermissions({ role: u.role, rank: u.rank, permissions: u.permissions }),
+    }));
   }
 
   findByUid(uid) {
@@ -124,13 +129,28 @@ class GusUserStore {
       }
     }
     user.uid = gusUser.uid;
-    user.username = gusUser.username;
-    user.role = gusUser.role;
-    user.fullName = gusUser.fullName || '';
-    user.mustChangePassword = !!gusUser.mustChangePassword;
+    this._applyProfile(user, gusUser);
     user.lastLogin = new Date().toISOString();
     this._write(doc);
     return user;
+  }
+
+  /** Copies the Passport-owned fields onto a roster row. The rank (label,
+   *  color, permissionLevel — sent by newer Passport builds) is what lets
+   *  a CUSTOM Passport rank land in the right access tier here instead of
+   *  falling back to StaffUsers; the theme is Passport's, so a theme picked
+   *  in Passport (or any other app) follows the user here too. */
+  _applyProfile(user, gusUser) {
+    user.username = gusUser.username;
+    user.role = normalizeRole(gusUser.role);
+    user.rank = gusUser.rank && typeof gusUser.rank === 'object' ? {
+      label: gusUser.rank.label || null,
+      color: gusUser.rank.color || null,
+      permissionLevel: Number.isFinite(gusUser.rank.permissionLevel) ? gusUser.rank.permissionLevel : null,
+    } : null;
+    user.fullName = gusUser.fullName || '';
+    user.mustChangePassword = !!gusUser.mustChangePassword;
+    if (gusUser.theme === 'sharp' || isValidTheme(gusUser.theme)) user.theme = normalizeTheme(gusUser.theme);
   }
 
   /** Stage a Fine Permissions grant for a username that hasn't logged in
@@ -175,7 +195,7 @@ class GusUserStore {
     const doc = this._read();
     const user = doc.users.find((u) => u.uid === uid);
     if (!user) throw new Error('No such user in the local roster');
-    if (updates.theme !== undefined) user.theme = updates.theme;
+    if (updates.theme !== undefined && isValidTheme(updates.theme)) user.theme = updates.theme;
     if (updates.avatarExt !== undefined) user.avatarExt = updates.avatarExt;
     this._write(doc);
     return user;
@@ -190,10 +210,7 @@ class GusUserStore {
     const doc = this._read();
     const user = doc.users.find((u) => u.uid === gusUser.uid);
     if (!user) return null;
-    user.username = gusUser.username;
-    user.role = gusUser.role;
-    user.fullName = gusUser.fullName || '';
-    user.mustChangePassword = !!gusUser.mustChangePassword;
+    this._applyProfile(user, gusUser);
     this._write(doc);
     return user;
   }

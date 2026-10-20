@@ -1,6 +1,6 @@
 'use strict';
 const express = require('express');
-const { VALID_ROLES } = require('../auth');
+const { VALID_ROLES, normalizeRole, rankInfo } = require('../permissions');
 
 module.exports = function adminRoutes(userStore, activityLog) {
   const router = express.Router();
@@ -27,9 +27,9 @@ module.exports = function adminRoutes(userStore, activityLog) {
       const { username, password, role, fullName, description } = req.body || {};
       if (!username || !password || !role) throw new Error('username, password, and role are required');
       if (password.length < 8) throw new Error('Password must be at least 8 characters');
-      if (!VALID_ROLES.includes(role)) throw new Error('Invalid role');
+      if (!VALID_ROLES.includes(normalizeRole(role))) throw new Error('Invalid role');
       const user = userStore.add({ username, password, role, fullName, description });
-      activityLog.add('admin', `${actor(req)} added administrator "${username}" (${role})`, actor(req));
+      activityLog.add('admin', `${actor(req)} added administrator "${username}" (${rankInfo(user.role).label})`, actor(req));
       res.json({ ok: true, user });
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -49,9 +49,9 @@ module.exports = function adminRoutes(userStore, activityLog) {
       if (!target) throw new Error('No such user');
 
       if (body.role) {
-        if (!VALID_ROLES.includes(body.role)) throw new Error('Invalid role');
+        if (!VALID_ROLES.includes(normalizeRole(body.role))) throw new Error('Invalid role');
         userStore.setRole(currentUsername, body.role);
-        activityLog.add('admin', `${actor(req)} changed ${currentUsername}'s role to ${body.role}`, actor(req));
+        activityLog.add('admin', `${actor(req)} changed ${currentUsername}'s rank to ${rankInfo(body.role).label}`, actor(req));
       }
 
       if (body.password) {
@@ -79,7 +79,7 @@ module.exports = function adminRoutes(userStore, activityLog) {
 
       if (body.newUsername && body.newUsername.trim() && body.newUsername.trim() !== currentUsername) {
         if (isSelf(req, currentUsername)) {
-          throw new Error('Renaming your own account while signed in isn\'t supported yet — ask another owner.');
+          throw new Error('Renaming your own account while signed in isn\'t supported yet — ask another Sysadmin.');
         }
         const renamed = userStore.rename(currentUsername, body.newUsername.trim());
         activityLog.add('admin', `${actor(req)} renamed "${currentUsername}" to "${renamed}"`, actor(req));

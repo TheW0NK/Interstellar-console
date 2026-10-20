@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const multer = require('multer');
+const { isValidTheme } = require('../themes');
 
 const ALLOWED_AVATAR_TYPES = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
 
@@ -44,6 +45,7 @@ module.exports = function accountRoutes(config, { userStore, gusUserStore, gusCl
   router.put('/account', express.json(), async (req, res) => {
     try {
       const { fullName, description, theme } = req.body || {};
+      if (theme !== undefined && !isValidTheme(theme)) throw new Error('Unknown theme');
       if (isGus(req)) {
         const { body } = await gusClient.updateProfile(req.session.gusToken, { fullName, description, theme });
         if (body.status !== 'ok') throw new Error(body.error || 'Could not update profile via GUS');
@@ -53,7 +55,7 @@ module.exports = function accountRoutes(config, { userStore, gusUserStore, gusCl
       const updates = {};
       if (fullName !== undefined) updates.fullName = String(fullName).slice(0, 100);
       if (description !== undefined) updates.description = String(description).slice(0, 300);
-      if (theme !== undefined && ['ember', 'ocean', 'forest', 'light'].includes(theme)) updates.theme = theme;
+      if (theme !== undefined) updates.theme = theme;
       const profile = userStore.update(req.session.user.username, updates);
       res.json({ ok: true, profile });
     } catch (err) {
@@ -75,7 +77,7 @@ module.exports = function accountRoutes(config, { userStore, gusUserStore, gusCl
       const user = userStore.findByUsername(username);
       if (!user) return res.status(404).json({ error: 'Account not found' });
       if (user.cannotChangePassword) {
-        return res.status(403).json({ error: 'This account is not permitted to change its own password. Ask an owner to reset it.' });
+        return res.status(403).json({ error: 'This account is not permitted to change its own password. Ask a Sysadmin to reset it.' });
       }
       if (!newPassword || newPassword.length < 8) throw new Error('New password must be at least 8 characters');
       if (newPassword !== confirmPassword) throw new Error('New password and confirmation do not match');

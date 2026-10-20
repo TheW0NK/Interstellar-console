@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 'use strict';
-// Usage: node scripts/add-user.js <username> <owner|admin|moderator>
+// Usage: node scripts/add-user.js <username> <trustedInstaller|systemAdministrator|elevatedStaff|staff>
+// (legacy owner/admin/moderator still work — they map to systemAdministrator/elevatedStaff/staff)
 // Prompts for a password (hidden), hashes it with bcrypt, appends to config/users.yml
 
 const readline = require('readline');
 const { loadConfig } = require('../src/config');
 const { UserStore } = require('../src/auth');
+const { VALID_ROLES, normalizeRole, rankInfo } = require('../src/permissions');
 
-const [, , username, role] = process.argv;
-const validRoles = ['owner', 'admin', 'moderator'];
+const [, , username, rawRole] = process.argv;
+const role = normalizeRole(rawRole);
 
-if (!username || !validRoles.includes(role)) {
-  console.error('Usage: node scripts/add-user.js <username> <owner|admin|moderator>');
+if (!username || !VALID_ROLES.includes(role)) {
+  console.error(`Usage: node scripts/add-user.js <username> <${VALID_ROLES.join('|')}>`);
   process.exit(1);
 }
 
@@ -60,7 +62,7 @@ function promptHidden(question) {
 
   try {
     store.add({ username, password, role });
-    console.log(`Added ${role} "${username}" to ${config.users.file}`);
+    console.log(`Added ${rankInfo(role).label} (${role}) "${username}" to ${config.users.file}`);
   } catch (err) {
     console.error('Failed: ' + err.message);
     process.exit(1);

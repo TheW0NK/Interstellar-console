@@ -2,9 +2,7 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
 const bcrypt = require('bcryptjs');
-const { effectivePermissions } = require('./permissions');
-
-const VALID_ROLES = ['owner', 'admin', 'moderator'];
+const { effectivePermissions, normalizeRole, VALID_ROLES } = require('./permissions');
 
 function defaultUserFields() {
   return {
@@ -42,7 +40,9 @@ class UserStore {
     if (!Array.isArray(doc.users)) doc.users = [];
     // Backfill defaults for users created under the old, simpler schema
     // so older users.yml files keep working without a migration step.
-    doc.users = doc.users.map((u) => ({ ...defaultUserFields(), ...u }));
+    // Same for roles: legacy owner/admin/moderator read back as their
+    // Passport rank equivalents (and get written that way on next save).
+    doc.users = doc.users.map((u) => ({ ...defaultUserFields(), ...u, role: normalizeRole(u.role) }));
     return doc;
   }
 
@@ -52,7 +52,8 @@ class UserStore {
       '# Vexium Panel — administrators\n' +
       '# =============================================================================\n' +
       '# Passwords are bcrypt hashes. Never edit in plaintext passwords.\n' +
-      '# Valid roles: owner, admin, moderator\n' +
+      '# Valid roles: trustedInstaller, systemAdministrator, elevatedStaff, staff\n' +
+      '# (legacy owner/admin/moderator are still accepted and converted automatically)\n' +
       '# =============================================================================\n\n';
     fs.writeFileSync(this.filePath, header + yaml.dump(doc, { lineWidth: -1 }), 'utf8');
   }
@@ -103,6 +104,7 @@ class UserStore {
   }
 
   add({ username, password, role, fullName, description }) {
+    role = normalizeRole(role);
     if (!VALID_ROLES.includes(role)) throw new Error('Invalid role');
     const doc = this._read();
     if (doc.users.some((u) => u.username.toLowerCase() === username.toLowerCase())) {
@@ -131,6 +133,7 @@ class UserStore {
   }
 
   setRole(username, role) {
+    role = normalizeRole(role);
     if (!VALID_ROLES.includes(role)) throw new Error('Invalid role');
     const doc = this._read();
     const user = doc.users.find((u) => u.username.toLowerCase() === username.toLowerCase());
@@ -221,7 +224,7 @@ function requireAuth(req, res, next) {
 function requireRole(...roles) {
   return (req, res, next) => {
     if (!req.session || !req.session.user) return res.status(401).json({ error: 'Not authenticated' });
-    if (!roles.includes(req.session.user.role)) return res.status(403).json({ error: 'Insufficient permissions' });
+    if (!roles.map(normalizeRole).includes(normalizeRole(req.session.user.role))) return res.status(403).json({ error: 'Insufficient permissions' });
     next();
   };
 }
