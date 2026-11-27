@@ -11,3 +11,4 @@ config/gus-users.yml
 *.log
 .DS_Store
 plugin/target/
+release/
