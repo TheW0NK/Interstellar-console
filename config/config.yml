@@ -4,14 +4,61 @@
 # =============================================================================
 
 panel:
-  # Interface to bind the web server to. Keep this 127.0.0.1 unless you're
-  # putting a reverse proxy in front of it, or you actually want it reachable
-  # over the LAN.
-  bind: "0.0.0.0"
+  # Interface to bind the web server to. Keep this 127.0.0.1 — that's all
+  # the remote access tunnel below needs, and it means nobody on your LAN
+  # can reach the panel directly either. Only change it to "0.0.0.0" if you
+  # deliberately want LAN access without the tunnel.
+  bind: "127.0.0.1"
   port: 8080
   # Random string used to sign session cookies. Change this to something
   # random before you expose the panel to anyone.
   sessionSecret: "CHANGE_ME_TO_A_RANDOM_STRING"
+
+# -----------------------------------------------------------------------------
+# Remote access — reach the panel from anywhere WITHOUT opening any ports.
+# -----------------------------------------------------------------------------
+# The panel starts a tunnel client alongside itself. That client makes an
+# outbound connection to Cloudflare or Tailscale, and visitors come back in
+# over it — your router never accepts an inbound connection, so there's no
+# port forwarding to set up (it works behind CGNAT too). The tunnel starts
+# and stops with the panel. Provider/Sysadmin accounts can see its status
+# and public URL in Administrator Management -> Remote access.
+#
+# You install the client once:
+#   cloudflare -> cloudflared  https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/
+#   tailscale  -> tailscale    https://tailscale.com/download  (then run `tailscale up` once)
+tunnel:
+  enabled: false
+  # "cloudflare" or "tailscale"
+  provider: "cloudflare"
+
+  cloudflare:
+    # Leave token empty for a free "quick tunnel": no Cloudflare account,
+    # you get a random https://<words>.trycloudflare.com address that
+    # CHANGES every time the panel restarts. Fine for trying it out.
+    #
+    # For a permanent address on your own domain, create a tunnel in the
+    # Cloudflare dashboard (Zero Trust -> Networks -> Tunnels), add a public
+    # hostname pointing at http://127.0.0.1:8080 (your panel.port), and paste
+    # the tunnel token here — or, better, leave it blank here and set the
+    # TUNNEL_TOKEN environment variable so the token isn't stored in a file.
+    token: ""
+    # The public hostname you set in the dashboard, e.g. "panel.example.com".
+    # Only used to display the URL — named tunnels don't report it themselves.
+    hostname: ""
+    # Full path if cloudflared isn't on PATH (e.g. "C:\\cloudflared\\cloudflared.exe").
+    binary: "cloudflared"
+
+  tailscale:
+    # "funnel" = public https://<machine>.<tailnet>.ts.net URL anyone can open
+    #            (enable Funnel for your tailnet in the Tailscale admin console).
+    # "serve"  = same URL, but ONLY your own tailnet's devices can reach it.
+    #            The most private option — nothing is exposed to the internet.
+    mode: "funnel"
+    binary: "tailscale"
+
+  # Print the tunnel client's own output into the panel log (for debugging).
+  logOutput: false
 
 servers:
   # Every server/proxy this panel manages lives in here now, not in this

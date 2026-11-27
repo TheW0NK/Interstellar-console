@@ -961,6 +961,12 @@ body{
 
       <div class="list" id="gusRosterList" style="margin-bottom:16px;"><div class="empty-state">No accounts seen yet.</div></div>
 
+      <div class="card" id="tunnelCard" style="margin-bottom:16px;display:none;">
+        <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">Remote access</div>
+        <div id="tunnelStatus" style="font-size:13px;"></div>
+        <div class="note" id="tunnelNote" style="margin-top:10px;"></div>
+      </div>
+
       <div class="card" style="margin-bottom:16px;">
         <div style="font-size:12.8px;font-weight:600;margin-bottom:10px;">GUS connection</div>
         <div class="acct-form-grid">
@@ -2306,8 +2312,51 @@ const PERMISSION_TAB_LABELS = {
 };
 
 async function renderAdminsTab(){
+  await renderTunnelStatus();
   await renderGusSettings();
   await renderGusRoster();
+}
+
+async function renderTunnelStatus(){
+  const card = document.getElementById('tunnelCard');
+  let t = null;
+  try{ t = await api('/api/tunnel'); } catch(err){ /* not fatal — just hide the card */ }
+  if(!t){ card.style.display = 'none'; return; }
+  card.style.display = '';
+  const statusEl = document.getElementById('tunnelStatus');
+  const noteEl = document.getElementById('tunnelNote');
+  const providerName = t.provider === 'tailscale' ? 'Tailscale' : 'Cloudflare';
+  const modeName = {
+    quick: 'quick tunnel', token: 'named tunnel', funnel: 'Funnel (public)', serve: 'Serve (tailnet only)',
+  }[t.mode] || '';
+  if(!t.enabled){
+    statusEl.innerHTML = '<span class="badge off">OFF</span> — the panel is only reachable from this machine' +
+      (t.bind === '127.0.0.1' ? '' : ' / local network');
+    noteEl.textContent = 'To reach the panel from anywhere without opening ports, set tunnel.enabled: true in config/config.yml and restart the panel.';
+    return;
+  }
+  const badge = {
+    connected: '<span class="badge on">CONNECTED</span>',
+    starting: '<span class="badge">STARTING</span>',
+    restarting: '<span class="badge" style="color:var(--red);">RECONNECTING</span>',
+    error: '<span class="badge off" style="color:var(--red);">ERROR</span>',
+    stopped: '<span class="badge off">STOPPED</span>',
+  }[t.state] || escapeHtml(t.state);
+  let html = `${badge} — ${escapeHtml(providerName)}${modeName ? ' ' + escapeHtml(modeName) : ''}`;
+  if(t.url){
+    const safe = escapeHtml(t.url);
+    html += `<div style="margin-top:8px;"><a href="${safe}" target="_blank" rel="noopener" style="color:var(--ember);font-family:var(--mono);font-size:12.5px;">${safe}</a></div>`;
+  }
+  if(t.error && t.state !== 'connected'){
+    html += `<div style="margin-top:8px;color:var(--red);">${escapeHtml(t.error)}</div>`;
+  }
+  statusEl.innerHTML = html;
+  const notes = [];
+  if(t.mode === 'quick') notes.push('Quick tunnel addresses change every time the panel restarts. Add a Cloudflare tunnel token for a permanent address.');
+  if(t.mode === 'token' && !t.url) notes.push('Set tunnel.cloudflare.hostname in config.yml to show your public address here.');
+  if(t.bind === '0.0.0.0' || t.bind === '::') notes.push('panel.bind is ' + t.bind + ', so the panel is also open on your local network. Set it to 127.0.0.1 to allow tunnel-only access.');
+  noteEl.textContent = notes.join(' ');
+  noteEl.style.display = notes.length ? '' : 'none';
 }
 
 async function renderGusSettings(){

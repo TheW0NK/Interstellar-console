@@ -103,6 +103,59 @@ itself no longer has those sections.
   exact console command surface to guess at syntax that might silently do
   the wrong thing; better to show you the raw output than a broken button.
 
+## Remote access (no port forwarding)
+
+You can reach the panel from anywhere **without opening any ports** on
+your router. Set `tunnel.enabled: true` in `config/config.yml` and the
+panel starts a tunnel client next to itself (`src/tunnel.js`). The client
+makes an **outbound** connection to Cloudflare or Tailscale, and visitors
+come back in over that connection. Your network never accepts an inbound
+connection, so there's nothing to forward, and it also works behind
+CGNAT, campus networks and most firewalls.
+
+| Provider | Setup | Address |
+|---|---|---|
+| `cloudflare`, no token (**quick tunnel**) | install `cloudflared` | random `https://<words>.trycloudflare.com`, **changes every restart** |
+| `cloudflare` + token (**named tunnel**) | install `cloudflared`, create a tunnel in the Cloudflare dashboard, paste the token | your own hostname, permanent |
+| `tailscale`, `mode: funnel` | install Tailscale, `tailscale up`, enable Funnel for your tailnet | `https://<machine>.<tailnet>.ts.net`, public |
+| `tailscale`, `mode: serve` | install Tailscale, `tailscale up` | same address, **only your tailnet's devices** can reach it |
+
+Quickest start (a temporary public address, no account needed):
+
+```yaml
+tunnel:
+  enabled: true
+  provider: "cloudflare"
+```
+
+Then `npm start` prints `[tunnel] panel is reachable at https://...`.
+Provider/Sysadmin accounts also see the status and address under
+**Administrator Management → Remote access**.
+
+For a permanent address, create a tunnel in Cloudflare Zero Trust →
+Networks → Tunnels, add a public hostname pointing at
+`http://127.0.0.1:<panel.port>`, and give the panel the token. Prefer the
+`TUNNEL_TOKEN` environment variable over `tunnel.cloudflare.token` so the
+token isn't stored in a file. The token goes to `cloudflared` through its
+environment, never on its command line. Set `tunnel.cloudflare.hostname`
+so the panel can show that address.
+
+Behaviour:
+- The tunnel's lifetime follows the panel's. It starts after the panel is
+  listening, and it stops on Ctrl+C or SIGTERM (it gets SIGKILL if it
+  doesn't exit in time). If the client crashes, it restarts with backoff
+  (2s, doubling, up to 60s). A missing binary or a bad config is reported
+  once and isn't retried.
+- `panel.bind` now defaults to `127.0.0.1`, which is all the tunnel needs.
+  With that bind, the tunnel is the **only** way in from another machine.
+  The panel warns at startup if you combine the tunnel with `0.0.0.0`.
+- The live-console WebSocket (`/ws`) now checks the session cookie and
+  the dashboard/console permission before upgrading. Before this, anyone
+  who could reach the panel could stream the console without signing in.
+  Once the panel has a public URL, that check is essential.
+- Only the panel is tunnelled. Players joining the Minecraft server itself
+  still connect to its game port (25565) as usual.
+
 ## Update checker
 
 `config/branding.yml` has a `version` field. On login, owners (only) get
@@ -321,7 +374,9 @@ logs something different at startup, the panel will just sit in
    ```
 
    By default it binds to `127.0.0.1:8080` (see `panel.bind` / `panel.port`
-   in the config). Open that URL in a browser and sign in.
+   in the config). Open that URL in a browser and sign in. To use it from
+   other devices without opening ports, turn on the tunnel; see
+   [Remote access](#remote-access-no-port-forwarding).
 
 ## Notes / limitations
 
@@ -363,7 +418,7 @@ logs something different at startup, the panel will just sit in
 
 ```
 config/
-  config.yml        # panel-level: bind/port, session secret
+  config.yml        # panel-level: bind/port, session secret, remote-access tunnel
   servers.yml        # one entry per server/proxy — directory, java args, type
   users.yml         # bcrypt-hashed LOCAL admin accounts (emergency fallback)
   gus.yml           # GUS connection settings (enabled/baseUrl/appId/appSecret)
@@ -387,6 +442,7 @@ src/
   themes.js         # theme ids shared with Passport
   failedLogins.js   # yaml-backed failed-login tracker
   updateChecker.js  # checks GitHub releases against branding.yml's version
+  tunnel.js         # remote-access tunnel (cloudflared / tailscale child process)
   stats.js          # /proc-based CPU/mem sampling
   routes/           # one file per API area, instantiated once per server
                      # (includes account.js, userHistory.js which are

@@ -32,6 +32,7 @@ const userHistoryRoutes = require('./routes/userHistory');
 const { UpdateChecker } = require('./updateChecker');
 const { GusSettingsStore, GusUserStore } = require('./gusStore');
 const { GusClient } = require('./gus');
+const { TunnelManager, tunnelTarget } = require('./tunnel');
 
 const config = loadConfig();
 const userStore = new UserStore(config.users.file);
@@ -112,12 +113,17 @@ if (userStore.isEmpty()) {
 const app = express();
 app.set('trust proxy', 1);
 app.use(express.json());
-app.use(session({
+// Kept as a named middleware so the websocket upgrade handler below can run
+// the exact same session check as the HTTP routes.
+const sessionMiddleware = session({
   secret: config.panel.sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: { httpOnly: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 12 },
-}));
+});
+app.use(sessionMiddleware);
+
+const tunnel = new TunnelManager(config.tunnel, tunnelTarget(config.panel));
 
 function clientIp(req) {
   return req.ip || (req.socket && req.socket.remoteAddress) || 'unknown';
@@ -271,6 +277,15 @@ app.get('/api/update-check', async (req, res) => {
 
 app.use('/api', activityRoutes(activityLog));
 
+// Remote-access tunnel status — full-access-only, same gating as the update
+// check. Returns null for everyone else so the frontend can call it blindly.
+app.get('/api/tunnel', (req, res) => {
+  const sessionUser = identity.lookup(req.session.user);
+  if (!sessionUser || !isFullAccess(sessionUser.role, sessionUser.rank)) return res.json(null);
+  const st = tunnel.getStatus();
+  res.json({ ...st, bind: config.panel.bind, port: config.panel.port });
+});
+
 /* ---------- per-server routes ----------
  * Every server/proxy defined in servers.yml gets its own set of routers,
  * built ONCE at boot (not per-request — schedules.js registers cron jobs
@@ -342,7 +357,29 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 /* ---------- http + websocket server ---------- */
 const server = http.createServer(app);
-const wss = new WebSocketServer({ server, path: '/ws' });
+const wss = new WebSocketServer({ noServer: true });
+
+// Websocket upgrades go through the same session cookie check as every
+// /api route. This matters a lot once the tunnel is on: without it, anyone
+// who found the public URL could open /ws and read the live console.
+server.on('upgrade', (req, socket, head) => {
+  const reject = (code, text) => {
+    socket.write(`HTTP/1.1 ${code} ${text}\r\nConnection: close\r\nContent-Length: 0\r\n\r\n`);
+    socket.destroy();
+  };
+  let pathname;
+  try { pathname = new URL(req.url, 'http://internal').pathname; } catch (err) { return reject(400, 'Bad Request'); }
+  if (pathname !== '/ws') return reject(404, 'Not Found');
+
+  sessionMiddleware(req, {}, () => {
+    const user = req.session && req.session.user ? identity.lookup(req.session.user) : null;
+    if (!user) return reject(401, 'Unauthorized');
+    if (user.disabled) return reject(403, 'Forbidden');
+    const perms = effectivePermissions(user);
+    if (!perms.tabs.includes('dashboard') && !perms.tabs.includes('console')) return reject(403, 'Forbidden');
+    wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws, req));
+  });
+});
 
 function broadcastAll(msg) {
   const data = JSON.stringify(msg);
@@ -364,10 +401,7 @@ registry.forEach((inst) => {
 activityLog.on('add', (entry) => broadcastAll({ type: 'activity', entry }));
 
 wss.on('connection', (ws, req) => {
-  // Websocket connections inherit the express-session cookie check performed
-  // implicitly by only exposing /ws to browsers that already loaded the
-  // authenticated app shell. For stricter enforcement, parse the session
-  // cookie here against the same store used by `session()` above.
+  // Already authenticated by the 'upgrade' handler above.
   const url = new URL(req.url, 'http://internal');
   const serverId = url.searchParams.get('server');
   const inst = serverId ? registry.get(serverId) : null;
@@ -398,9 +432,21 @@ setInterval(async () => {
 server.listen(config.panel.port, config.panel.bind, () => {
   console.log(`Interstellar Console listening on http://${config.panel.bind}:${config.panel.port}`);
   registry.forEach((inst) => console.log(`  - [${inst.id}] ${inst.name}: ${inst.serverConfig.server.directory}/${inst.serverConfig.server.jarFile}`));
+  if (tunnel.status.enabled) {
+    const bind = config.panel.bind;
+    if (bind === '0.0.0.0' || bind === '::') {
+      console.warn('[tunnel] panel.bind is ' + bind + ' — the tunnel works without that. Set it to 127.0.0.1 so the panel is only reachable through the tunnel.');
+    }
+    tunnel.start();
+  } else {
+    console.log('Remote access tunnel is off (tunnel.enabled in config.yml). The panel is only reachable on this machine/network.');
+  }
 });
 
-process.on('SIGINT', () => {
-  console.log('\nShutting down panel (server processes are left running if online)...');
-  process.exit(0);
-});
+function shutdown(signal) {
+  console.log(`\nShutting down panel (${signal}) — server processes are left running if online...`);
+  // Give the tunnel client a moment to close its edge connections cleanly.
+  tunnel.stopAndWait(2000).then(() => process.exit(0));
+}
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
